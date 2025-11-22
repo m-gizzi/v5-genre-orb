@@ -119,6 +119,13 @@ GEM
     erubi (1.13.1)
     et-orbi (1.4.0)
       tzinfo
+    factory_bot (6.5.6)
+      activesupport (>= 6.1.0)
+    factory_bot_rails (6.5.1)
+      factory_bot (~> 6.5)
+      railties (>= 6.1.0)
+    faker (3.5.2)
+      i18n (>= 1.8.11, < 2)
     ffi (1.17.2-aarch64-linux-gnu)
     ffi (1.17.2-aarch64-linux-musl)
     ffi (1.17.2-arm-linux-gnu)
@@ -314,6 +321,9 @@ GEM
     rubocop-ast (1.48.0)
       parser (>= 3.3.7.2)
       prism (~> 1.4)
+    rubocop-factory_bot (2.28.0)
+      lint_roller (~> 1.1)
+      rubocop (~> 1.72, >= 1.72.1)
     rubocop-performance (1.26.1)
       lint_roller (~> 1.1)
       rubocop (>= 1.75.0, < 2.0)
@@ -431,6 +441,8 @@ DEPENDENCIES
   bundler-audit
   capybara
   debug
+  factory_bot_rails
+  faker
   image_processing (~> 1.2)
   importmap-rails
   jbuilder
@@ -441,6 +453,7 @@ DEPENDENCIES
   rails (~> 8.1.1)
   rspec-rails (~> 8.0.0)
   rubocop
+  rubocop-factory_bot
   rubocop-performance
   rubocop-rails
   rubocop-rspec
