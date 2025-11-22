@@ -11,5 +11,8 @@ AllCops:
 Layout/FirstArrayElementIndentation:
   EnforcedStyle: consistent
 
+Rails/RakeEnvironment:
+  Enabled: false
+
 Style/Documentation:
   Enabled: false

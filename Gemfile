@@ -41,6 +41,7 @@ gem 'thruster', require: false
 
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 gem 'image_processing', '~> 1.2'
+gem 'strong_migrations'
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
@@ -53,6 +54,9 @@ group :development, :test do
   gem 'brakeman', require: false
   gem 'factory_bot_rails'
   gem 'faker'
+  gem 'pry-byebug'
+  gem 'rails_best_practices', require: false
+  gem 'reek', require: false
   gem 'rspec-rails', '~> 8.0.0'
   gem 'rubocop', require: false
   gem 'rubocop-factory_bot', require: false

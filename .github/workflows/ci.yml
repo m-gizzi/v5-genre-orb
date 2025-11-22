@@ -65,6 +65,12 @@ jobs:
       - name: Lint code for consistent style
         run: bin/rubocop -f github
 
+      - name: Check for code smells with Reek
+        run: bundle exec reek
+
+      - name: Check Rails best practices
+        run: bundle exec rails_best_practices .
+
   rspec:
     runs-on: ubuntu-latest
 
