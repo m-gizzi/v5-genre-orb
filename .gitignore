@@ -33,3 +33,8 @@
 # Ignore key files for decrypting credentials and more.
 /config/*.key
 
+# Ignore test coverage reports
+/coverage
+
+# Ignore RSpec example status persistence file
+/spec/examples.txt
