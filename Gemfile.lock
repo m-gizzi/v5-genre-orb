@@ -218,6 +218,7 @@ GEM
       zeitwerk (>= 2.6.18, < 3.0)
     language_server-protocol (3.17.0.5)
     lint_roller (1.1.0)
+    lockbox (2.1.0)
     logger (1.7.0)
     loofah (2.24.1)
       crass (~> 1.0.2)
@@ -556,13 +557,14 @@ DEPENDENCIES
   bundler-audit
   capybara
   debug
-  dotenv-rails
+  dotenv-rails (~> 3.1)
   factory_bot_rails
   faker
   image_processing (~> 1.2)
   importmap-rails
   jbuilder
   kamal
+  lockbox
   pg (~> 1.1)
   propshaft
   pry-byebug
@@ -571,7 +573,7 @@ DEPENDENCIES
   rails_best_practices
   reek
   rspec-rails (~> 8.0.0)
-  rspotify
+  rspotify (~> 2.12)
   rubocop
   rubocop-factory_bot
   rubocop-performance
