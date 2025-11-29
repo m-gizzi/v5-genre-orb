@@ -1,0 +1,11 @@
+<% content_for :title, "Welcome to Genre Orb" %>
+
+<div class="home-container">
+  <h1>Welcome to Genre Orb</h1>
+  <p>Connect your Spotify account to get started.</p>
+
+  <%= button_to "Sign in with Spotify",
+                "/auth/spotify",
+                method: :post,
+                data: { turbo: false } %>
+</div>
