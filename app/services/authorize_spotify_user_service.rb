@@ -4,7 +4,6 @@ class AuthorizeSpotifyUserService < ApplicationService
   attr_reader :auth_hash
 
   def initialize(auth_hash)
-    super
     @auth_hash = auth_hash
   end
 
