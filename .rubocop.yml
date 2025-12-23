@@ -20,5 +20,8 @@ Lint/MissingSuper:
 Rails/RakeEnvironment:
   Enabled: false
 
+RSpecRails/InferredSpecType:
+  Enabled: false
+
 Style/Documentation:
   Enabled: false

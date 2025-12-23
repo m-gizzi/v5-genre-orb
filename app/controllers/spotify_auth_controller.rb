@@ -3,7 +3,13 @@
 class SpotifyAuthController < ApplicationController
   def callback
     auth_hash = request.env['omniauth.auth']
-    AuthorizeSpotifyUserService.call(auth_hash)
+    auth_payload = Spotify::AuthPayload.from_auth_hash(auth_hash)
+
+    unless auth_payload.valid?
+      return redirect_to auth_failure_path, alert: 'Invalid authentication response from Spotify'
+    end
+
+    AuthorizeSpotifyUserService.call(auth_payload)
 
     redirect_to auth_success_path, notice: 'Successfully signed in with Spotify!'
   rescue StandardError

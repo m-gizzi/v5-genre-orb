@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe 'Spotify Authentication' do
+RSpec.describe 'Spotify Authentication', type: :system do
   before do
     driven_by(:rack_test)
 
