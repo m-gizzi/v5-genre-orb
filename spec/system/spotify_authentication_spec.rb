@@ -27,10 +27,11 @@ RSpec.describe 'Spotify Authentication', type: :system do
       expect(page).to have_content('Welcome to Genre Orb')
       expect(page).to have_button('Sign in with Spotify')
 
-      click_button 'Sign in with Spotify'
+      expect do
+        click_button 'Sign in with Spotify'
+      end.to change(User, :count).from(0).to(1)
 
       expect(page).to have_content('Successfully Signed In!')
-      expect(User.count).to eq(1)
 
       user = User.last
       expect(user.spotify_email).to eq('test@example.com')
@@ -49,10 +50,12 @@ RSpec.describe 'Spotify Authentication', type: :system do
 
     it 'updates existing user tokens without creating new user' do
       visit root_path
-      click_button 'Sign in with Spotify'
+
+      expect do
+        click_button 'Sign in with Spotify'
+      end.not_to change(User, :count)
 
       expect(page).to have_content('Successfully Signed In!')
-      expect(User.count).to eq(1)
 
       existing_user.reload
       expect(existing_user.access_token).to eq('mock_access_token')

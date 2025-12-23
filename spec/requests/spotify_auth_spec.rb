@@ -39,7 +39,7 @@ RSpec.describe 'Spotify Authentication', type: :request do
                                  })
       end
 
-      it 'redirects to failure path' do
+      it 'redirects to root path' do
         get '/auth/spotify/callback'
         expect(response).to redirect_to(root_path)
       end
@@ -60,14 +60,14 @@ RSpec.describe 'Spotify Authentication', type: :request do
           .and_raise(StandardError, 'Unexpected error')
       end
 
-      it 'redirects to failure path' do
+      it 'redirects to root path' do
         get '/auth/spotify/callback'
         expect(response).to redirect_to(root_path)
       end
 
       it 'sets error flash message' do
         get '/auth/spotify/callback'
-        expect(flash[:alert]).to include('unexpected error')
+        expect(flash[:alert]).to eq('An unexpected error occurred during authentication')
       end
     end
   end

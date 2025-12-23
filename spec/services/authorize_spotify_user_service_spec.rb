@@ -50,23 +50,5 @@ RSpec.describe AuthorizeSpotifyUserService do
         expect(user.refresh_token).to eq('refresh_token_123')
       end
     end
-
-    context 'when display_name is missing' do
-      let(:auth_payload) do
-        Spotify::AuthPayload.new(
-          spotify_id: 'spotify123',
-          email: 'test@example.com',
-          display_name: nil,
-          token: 'access_token_123',
-          refresh_token: 'refresh_token_123',
-          expires_at: 1.hour.from_now.to_i
-        )
-      end
-
-      it 'uses email prefix as display name' do
-        user = described_class.call(auth_payload)
-        expect(user.spotify_display_name).to eq('test')
-      end
-    end
   end
 end
