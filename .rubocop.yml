@@ -17,6 +17,9 @@ Layout/FirstArrayElementIndentation:
 Lint/MissingSuper:
   AllowedParentClasses: [ApplicationService]
 
+Metrics/MethodLength:
+  CountAsOne: ['array', 'hash', 'heredoc', 'method_call']
+
 Rails/RakeEnvironment:
   Enabled: false
 
