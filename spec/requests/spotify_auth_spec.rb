@@ -2,21 +2,21 @@
 
 require 'rails_helper'
 
-RSpec.describe 'Spotify Authentication', type: :request do
+RSpec.describe 'Spotify Authentication' do
   describe 'GET /auth/spotify/callback' do
     before do
       OmniAuth.config.add_mock(:spotify, {
-        uid: 'spotify123',
-        info: {
-          email: 'test@example.com',
-          display_name: 'Test User'
-        },
-        credentials: {
-          token: 'access_token_123',
-          refresh_token: 'refresh_token_123',
-          expires_at: 1.hour.from_now.to_i
-        }
-      })
+                                 uid: 'spotify123',
+                                 info: {
+                                   email: 'test@example.com',
+                                   display_name: 'Test User'
+                                 },
+                                 credentials: {
+                                   token: 'access_token_123',
+                                   refresh_token: 'refresh_token_123',
+                                   expires_at: 1.hour.from_now.to_i
+                                 }
+                               })
     end
 
     context 'with successful authorization' do

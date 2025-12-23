@@ -2,22 +2,22 @@
 
 require 'rails_helper'
 
-RSpec.describe 'Spotify Authentication', type: :system do
+RSpec.describe 'Spotify Authentication' do
   before do
     driven_by(:rack_test)
 
     OmniAuth.config.add_mock(:spotify, {
-      uid: 'spotify123',
-      info: {
-        email: 'test@example.com',
-        display_name: 'Test User'
-      },
-      credentials: {
-        token: 'mock_access_token',
-        refresh_token: 'mock_refresh_token',
-        expires_at: 1.hour.from_now.to_i
-      }
-    })
+                               uid: 'spotify123',
+                               info: {
+                                 email: 'test@example.com',
+                                 display_name: 'Test User'
+                               },
+                               credentials: {
+                                 token: 'mock_access_token',
+                                 refresh_token: 'mock_refresh_token',
+                                 expires_at: 1.hour.from_now.to_i
+                               }
+                             })
   end
 
   context 'when signing in for the first time' do

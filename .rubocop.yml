@@ -1,15 +1,21 @@
+inherit_from: .rubocop_todo.yml
+
 plugins:
   - rubocop-factory_bot
   - rubocop-rails
   - rubocop-rspec
   - rubocop-rspec_rails
   - rubocop-performance
+  - rubocop-capybara
 
 AllCops:
   NewCops: enable
 
 Layout/FirstArrayElementIndentation:
   EnforcedStyle: consistent
+
+Lint/MissingSuper:
+  AllowedParentClasses: [ApplicationService]
 
 Rails/RakeEnvironment:
   Enabled: false
