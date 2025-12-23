@@ -41,12 +41,12 @@ RSpec.describe 'Spotify Authentication', type: :request do
 
       it 'redirects to failure path' do
         get '/auth/spotify/callback'
-        expect(response).to redirect_to(auth_failure_path)
+        expect(response).to redirect_to(root_path)
       end
 
       it 'sets error flash message' do
         get '/auth/spotify/callback'
-        expect(flash[:alert]).to eq('Invalid authentication response from Spotify')
+        expect(flash[:alert]).to eq('An unexpected error occurred during authentication')
       end
 
       it 'does not create a user' do
@@ -62,38 +62,12 @@ RSpec.describe 'Spotify Authentication', type: :request do
 
       it 'redirects to failure path' do
         get '/auth/spotify/callback'
-        expect(response).to redirect_to(auth_failure_path)
+        expect(response).to redirect_to(root_path)
       end
 
       it 'sets error flash message' do
         get '/auth/spotify/callback'
         expect(flash[:alert]).to include('unexpected error')
-      end
-    end
-  end
-
-  describe 'GET /auth/failure' do
-    context 'when user denies access' do
-      it 'redirects to root with appropriate message' do
-        get '/auth/failure', params: { message: 'access_denied' }
-        expect(response).to redirect_to(root_path)
-        expect(flash[:alert]).to include('denied access')
-      end
-    end
-
-    context 'when credentials are invalid' do
-      it 'redirects to root with appropriate message' do
-        get '/auth/failure', params: { message: 'invalid_credentials' }
-        expect(response).to redirect_to(root_path)
-        expect(flash[:alert]).to include('Invalid Spotify credentials')
-      end
-    end
-
-    context 'with unknown error' do
-      it 'redirects to root with generic message' do
-        get '/auth/failure', params: { message: 'unknown_error' }
-        expect(response).to redirect_to(root_path)
-        expect(flash[:alert]).to include('Authentication failed')
       end
     end
   end

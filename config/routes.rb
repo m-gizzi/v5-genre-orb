@@ -5,6 +5,5 @@ Rails.application.routes.draw do
   get 'up' => 'rails/health#show', as: :rails_health_check
 
   get '/auth/spotify/callback', to: 'spotify_auth#callback'
-  get '/auth/failure', to: 'spotify_auth#failure'
   get '/auth/success', to: 'spotify_auth#success'
 end
