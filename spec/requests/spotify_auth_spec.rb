@@ -25,11 +25,6 @@ RSpec.describe 'Spotify Authentication', type: :request do
         expect(response).to redirect_to(auth_success_path)
       end
 
-      it 'sets success flash message' do
-        get '/auth/spotify/callback'
-        expect(flash[:notice]).to include('Successfully signed in')
-      end
-
       it 'creates a user via the service' do
         expect { get '/auth/spotify/callback' }.to change(User, :count).by(1)
       end

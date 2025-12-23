@@ -11,7 +11,7 @@ class SpotifyAuthController < ApplicationController
 
     AuthorizeSpotifyUserService.call(auth_payload)
 
-    redirect_to auth_success_path, notice: 'Successfully signed in with Spotify!'
+    redirect_to auth_success_path
   rescue StandardError
     redirect_to auth_failure_path, alert: 'An unexpected error occurred during authentication'
   end
