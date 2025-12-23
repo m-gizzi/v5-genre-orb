@@ -33,10 +33,11 @@ RSpec.describe 'Spotify Authentication', type: :system do
 
       expect(page).to have_content('Successfully Signed In!')
 
-      user = User.last
-      expect(user.spotify_email).to eq('test@example.com')
-      expect(user.spotify_display_name).to eq('Test User')
-      expect(user.spotify_id).to eq('spotify123')
+      expect(User.last).to have_attributes(
+        spotify_id: 'spotify123',
+        spotify_email: 'test@example.com',
+        spotify_display_name: 'Test User'
+      )
     end
   end
 
@@ -57,9 +58,10 @@ RSpec.describe 'Spotify Authentication', type: :system do
 
       expect(page).to have_content('Successfully Signed In!')
 
-      existing_user.reload
-      expect(existing_user.access_token).to eq('mock_access_token')
-      expect(existing_user.refresh_token).to eq('mock_refresh_token')
+      expect(existing_user.reload).to have_attributes(
+        access_token: 'mock_access_token',
+        refresh_token: 'mock_refresh_token'
+      )
     end
   end
 end

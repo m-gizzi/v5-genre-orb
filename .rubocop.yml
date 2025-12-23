@@ -23,5 +23,12 @@ Rails/RakeEnvironment:
 RSpecRails/InferredSpecType:
   Enabled: false
 
+RSpec/MultipleExpectations:
+  Enabled: false
+
+RSpec/ExampleLength:
+  Max: 10
+  CountAsOne: ['array', 'hash', 'heredoc', 'method_call']
+
 Style/Documentation:
   Enabled: false

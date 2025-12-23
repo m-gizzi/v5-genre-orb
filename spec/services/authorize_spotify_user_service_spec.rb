@@ -22,11 +22,13 @@ RSpec.describe AuthorizeSpotifyUserService do
 
       it 'sets correct user attributes' do
         user = described_class.call(auth_payload)
-        expect(user.spotify_id).to eq('spotify123')
-        expect(user.spotify_email).to eq('test@example.com')
-        expect(user.spotify_display_name).to eq('Test User')
-        expect(user.access_token).to eq('access_token_123')
-        expect(user.refresh_token).to eq('refresh_token_123')
+        expect(user).to have_attributes(
+          spotify_id: 'spotify123',
+          spotify_email: 'test@example.com',
+          spotify_display_name: 'Test User',
+          access_token: 'access_token_123',
+          refresh_token: 'refresh_token_123'
+        )
         expect(user.token_expires_at).to be_present
       end
     end
@@ -45,9 +47,11 @@ RSpec.describe AuthorizeSpotifyUserService do
 
       it 'updates existing user tokens' do
         user = described_class.call(auth_payload)
-        expect(user.id).to eq(existing_user.id)
-        expect(user.access_token).to eq('access_token_123')
-        expect(user.refresh_token).to eq('refresh_token_123')
+        expect(user).to have_attributes(
+          id: existing_user.id,
+          access_token: 'access_token_123',
+          refresh_token: 'refresh_token_123'
+        )
       end
     end
   end
