@@ -36,4 +36,137 @@ RSpec.describe Spotify::BaseClient do
       expect(client.rspotify_user.id).to eq(user.spotify_id)
     end
   end
+
+  describe '#spotify_api_call' do
+    subject(:client) { described_class.new(user) }
+
+    let(:endpoint) { 'spotify:playlists' }
+
+    context 'when no cooldown is active' do
+      before do
+        allow(RateLimitCooldown).to receive(:find_in_progress).with(endpoint).and_return(nil)
+      end
+
+      it 'executes the block' do
+        expect { |b| client.send(:spotify_api_call, endpoint, &b) }.to yield_control
+      end
+
+      it 'returns the block result' do
+        result = client.send(:spotify_api_call, endpoint) { 'success' }
+        expect(result).to eq('success')
+      end
+    end
+
+    context 'when cooldown is active' do
+      let(:cooldown) { create(:rate_limit_cooldown, :in_progress, endpoint: endpoint) }
+
+      before do
+        allow(RateLimitCooldown).to receive(:find_in_progress).with(endpoint).and_return(cooldown)
+      end
+
+      it 'raises RateLimitCooldownActive error' do
+        expect do
+          client.send(:spotify_api_call, endpoint) { 'should not execute' }
+        end.to raise_error(Spotify::Errors::RateLimitCooldownActive)
+      end
+
+      it 'does not execute the block' do
+        expect do |b|
+          begin
+            client.send(:spotify_api_call, endpoint, &b)
+          rescue Spotify::Errors::RateLimitCooldownActive
+            # Expected error
+          end
+        end.not_to yield_control
+      end
+
+      it 'includes retry_after in error' do
+        error = nil
+        begin
+          client.send(:spotify_api_call, endpoint) { 'should not execute' }
+        rescue Spotify::Errors::RateLimitCooldownActive => e
+          error = e
+        end
+
+        expect(error.retry_after).to eq(cooldown.seconds_remaining)
+      end
+    end
+
+    context 'when API returns 429 Too Many Requests' do
+      let(:retry_after_seconds) { 60 }
+      let(:rest_client_error) do
+        response = double('response', headers: { retry_after: retry_after_seconds })
+        RestClient::TooManyRequests.new(response)
+      end
+
+      before do
+        allow(RateLimitCooldown).to receive(:find_in_progress).with(endpoint).and_return(nil)
+        allow(RateLimitCooldown).to receive(:set_cooldown!)
+      end
+
+      it 'creates a cooldown record' do
+        begin
+          client.send(:spotify_api_call, endpoint) { raise rest_client_error }
+        rescue Spotify::Errors::RateLimitError
+          # Expected error
+        end
+
+        expect(RateLimitCooldown).to have_received(:set_cooldown!).with(endpoint, retry_after_seconds)
+      end
+
+      it 'raises RateLimitError with retry_after' do
+        error = nil
+        begin
+          client.send(:spotify_api_call, endpoint) { raise rest_client_error }
+        rescue Spotify::Errors::RateLimitError => e
+          error = e
+        end
+
+        expect(error.retry_after).to eq(retry_after_seconds)
+      end
+
+      context 'when retry_after header is missing' do
+        let(:rest_client_error) do
+          response = double('response', headers: {})
+          RestClient::TooManyRequests.new(response)
+        end
+
+        it 'uses default retry_after of 60 seconds' do
+          begin
+            client.send(:spotify_api_call, endpoint) { raise rest_client_error }
+          rescue Spotify::Errors::RateLimitError
+            # Expected error
+          end
+
+          expect(RateLimitCooldown).to have_received(:set_cooldown!).with(endpoint, 60)
+        end
+      end
+    end
+
+    context 'when API returns authentication error' do
+      let(:auth_error) { RestClient::Unauthorized.new }
+
+      before do
+        allow(RateLimitCooldown).to receive(:find_in_progress).with(endpoint).and_return(nil)
+      end
+
+      it 'raises AuthenticationError' do
+        expect do
+          client.send(:spotify_api_call, endpoint) { raise auth_error }
+        end.to raise_error(Spotify::Errors::AuthenticationError)
+      end
+
+      it 'does not create a cooldown' do
+        allow(RateLimitCooldown).to receive(:set_cooldown!)
+
+        begin
+          client.send(:spotify_api_call, endpoint) { raise auth_error }
+        rescue Spotify::Errors::AuthenticationError
+          # Expected error
+        end
+
+        expect(RateLimitCooldown).not_to have_received(:set_cooldown!)
+      end
+    end
+  end
 end

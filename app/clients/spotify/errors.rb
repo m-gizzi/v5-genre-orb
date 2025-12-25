@@ -14,5 +14,7 @@ module Spotify
         @retry_after = retry_after
       end
     end
+
+    class RateLimitCooldownActive < RateLimitError; end
   end
 end

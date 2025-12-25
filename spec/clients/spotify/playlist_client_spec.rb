@@ -82,6 +82,47 @@ RSpec.describe Spotify::PlaylistClient do
         expect { playlists }.to raise_error(Spotify::Errors::AuthenticationError)
       end
     end
+
+    context 'when rate limit cooldown is active' do
+      let(:cooldown) { create(:rate_limit_cooldown, :in_progress, endpoint: 'spotify:playlists') }
+
+      before do
+        allow(RateLimitCooldown).to receive(:find_in_progress).with('spotify:playlists').and_return(cooldown)
+      end
+
+      it 'raises RateLimitCooldownActive without calling API' do
+        expect { playlists }.to raise_error(Spotify::Errors::RateLimitCooldownActive)
+        expect(client.rspotify_user).not_to have_received(:playlists)
+      end
+    end
+
+    context 'when API returns 429 Too Many Requests' do
+      let(:retry_after) { 60 }
+      let(:too_many_requests_error) do
+        response = double('response', headers: { retry_after: retry_after })
+        RestClient::TooManyRequests.new(response)
+      end
+
+      before do
+        allow(RateLimitCooldown).to receive(:find_in_progress).and_return(nil)
+        allow(RateLimitCooldown).to receive(:set_cooldown!)
+        allow(client.rspotify_user).to receive(:playlists).and_raise(too_many_requests_error)
+      end
+
+      it 'creates a rate limit cooldown' do
+        begin
+          playlists
+        rescue Spotify::Errors::RateLimitError
+          # Expected error
+        end
+
+        expect(RateLimitCooldown).to have_received(:set_cooldown!).with('spotify:playlists', retry_after)
+      end
+
+      it 'raises RateLimitError' do
+        expect { playlists }.to raise_error(Spotify::Errors::RateLimitError)
+      end
+    end
   end
 
   describe '#fetch_all_user_playlists' do
@@ -244,6 +285,47 @@ RSpec.describe Spotify::PlaylistClient do
 
       it 'raises ApiError' do
         expect { created_playlist }.to raise_error(Spotify::Errors::ApiError)
+      end
+    end
+
+    context 'when rate limit cooldown is active' do
+      let(:cooldown) { create(:rate_limit_cooldown, :in_progress, endpoint: 'spotify:playlists') }
+
+      before do
+        allow(RateLimitCooldown).to receive(:find_in_progress).with('spotify:playlists').and_return(cooldown)
+      end
+
+      it 'raises RateLimitCooldownActive without calling API' do
+        expect { created_playlist }.to raise_error(Spotify::Errors::RateLimitCooldownActive)
+        expect(client.rspotify_user).not_to have_received(:create_playlist!)
+      end
+    end
+
+    context 'when API returns 429 Too Many Requests' do
+      let(:retry_after) { 120 }
+      let(:too_many_requests_error) do
+        response = double('response', headers: { retry_after: retry_after })
+        RestClient::TooManyRequests.new(response)
+      end
+
+      before do
+        allow(RateLimitCooldown).to receive(:find_in_progress).and_return(nil)
+        allow(RateLimitCooldown).to receive(:set_cooldown!)
+        allow(client.rspotify_user).to receive(:create_playlist!).and_raise(too_many_requests_error)
+      end
+
+      it 'creates a rate limit cooldown' do
+        begin
+          created_playlist
+        rescue Spotify::Errors::RateLimitError
+          # Expected error
+        end
+
+        expect(RateLimitCooldown).to have_received(:set_cooldown!).with('spotify:playlists', retry_after)
+      end
+
+      it 'raises RateLimitError' do
+        expect { created_playlist }.to raise_error(Spotify::Errors::RateLimitError)
       end
     end
   end

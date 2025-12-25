@@ -9,10 +9,6 @@ class RateLimitCooldown < ApplicationRecord
   scope :expired, -> { where(expires_at: ...Time.current) }
 
   class << self
-    def in_progress_for?(endpoint)
-      in_progress.exists?(endpoint: endpoint)
-    end
-
     def find_in_progress(endpoint)
       in_progress.find_by(endpoint: endpoint)
     end

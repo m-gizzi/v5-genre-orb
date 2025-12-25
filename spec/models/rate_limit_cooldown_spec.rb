@@ -31,23 +31,6 @@ RSpec.describe RateLimitCooldown do
     end
   end
 
-  describe '.in_progress_for?' do
-    let!(:active_cooldown) { create(:rate_limit_cooldown, :in_progress, endpoint: 'spotify:playlists') }
-    let!(:expired_cooldown) { create(:rate_limit_cooldown, :expired, endpoint: 'spotify:tracks') }
-
-    it 'returns true when active cooldown exists for endpoint' do
-      expect(described_class.in_progress_for?('spotify:playlists')).to be true
-    end
-
-    it 'returns false when cooldown is expired' do
-      expect(described_class.in_progress_for?('spotify:tracks')).to be false
-    end
-
-    it 'returns false when no cooldown exists for endpoint' do
-      expect(described_class.in_progress_for?('spotify:artists')).to be false
-    end
-  end
-
   describe '.find_in_progress' do
     let!(:active_cooldown) { create(:rate_limit_cooldown, :in_progress, endpoint: 'spotify:playlists') }
     let!(:expired_cooldown) { create(:rate_limit_cooldown, :expired, endpoint: 'spotify:tracks') }

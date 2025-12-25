@@ -38,15 +38,43 @@ module Spotify
       end
     end
 
-    def with_error_handling
+    def spotify_api_call(endpoint)
+      check_rate_limit_cooldown!(endpoint)
       yield
     rescue RestClient::Unauthorized
-      raise Errors::AuthenticationError, 'Spotify authentication failed. Please re-authorize.'
+      handle_unauthorized_error
     rescue RestClient::TooManyRequests => e
-      retry_after = e.response.headers[:retry_after]&.to_i
-      raise Errors::RateLimitError.new('Spotify rate limit exceeded', retry_after: retry_after)
+      handle_rate_limit_error(e, endpoint)
     rescue RestClient::ExceptionWithResponse => e
-      raise Errors::ApiError, "Spotify API error: #{e.message}"
+      handle_api_error(e)
+    end
+
+    def check_rate_limit_cooldown!(endpoint)
+      cooldown = RateLimitCooldown.find_in_progress(endpoint)
+      return unless cooldown
+
+      raise Errors::RateLimitCooldownActive.new(
+        "Endpoint #{endpoint} is rate limited until #{cooldown.expires_at}",
+        retry_after: cooldown.seconds_remaining
+      )
+    end
+
+    def handle_unauthorized_error
+      raise Errors::AuthenticationError, 'Spotify authentication failed. Please re-authorize.'
+    end
+
+    def handle_rate_limit_error(error, endpoint)
+      retry_after = error.response.headers[:retry_after]&.to_i || 60
+      RateLimitCooldown.set_cooldown!(endpoint, retry_after)
+
+      raise Errors::RateLimitError.new(
+        "Rate limit exceeded, retry after #{retry_after}s",
+        retry_after: retry_after
+      )
+    end
+
+    def handle_api_error(error)
+      raise Errors::ApiError, "Spotify API error: #{error.message}"
     end
   end
 end
