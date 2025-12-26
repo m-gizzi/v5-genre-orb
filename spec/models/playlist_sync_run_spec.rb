@@ -2,13 +2,6 @@
 
 require 'rails_helper'
 
-# Stub the job module/class since it doesn't exist yet
-module Playlists
-  class ArchiveMissingJob
-    def self.perform_later(_id); end
-  end
-end
-
 RSpec.describe PlaylistSyncRun do
   describe 'scopes' do
     describe '.in_progress' do
@@ -240,6 +233,184 @@ RSpec.describe PlaylistSyncRun do
     it 'returns true when batches_completed exceeds batches_total' do
       sync = build(:playlist_sync_run, batches_total: 5, batches_completed: 6)
       expect(sync.all_batches_completed?).to be true
+    end
+  end
+
+  describe 'AASM state transitions' do
+    let(:sync_run) { create(:playlist_sync_run) }
+
+    before do
+      allow(Playlists::ArchiveMissingJob).to receive(:perform_later)
+    end
+
+    describe '#start_fetching_metadata!' do
+      it 'transitions from pending to fetching_metadata' do
+        expect { sync_run.start_fetching_metadata! }
+          .to change { sync_run.status }.from('pending').to('fetching_metadata')
+      end
+
+      it 'sets started_at timestamp' do
+        freeze_time do
+          sync_run.start_fetching_metadata!
+          expect(sync_run.started_at).to be_within(1.second).of(Time.current)
+        end
+      end
+
+      it 'raises error when called from wrong state' do
+        sync_run.update!(status: :completed)
+        expect { sync_run.start_fetching_metadata! }.to raise_error(AASM::InvalidTransition)
+      end
+    end
+
+    describe '#start_processing_batches!' do
+      it 'transitions from fetching_metadata to processing_batches' do
+        sync_run.update!(status: :fetching_metadata)
+        expect { sync_run.start_processing_batches! }
+          .to change { sync_run.status }.from('fetching_metadata').to('processing_batches')
+      end
+
+      it 'raises error when called from pending' do
+        expect { sync_run.start_processing_batches! }.to raise_error(AASM::InvalidTransition)
+      end
+
+      it 'raises error when called from completed' do
+        sync_run.update!(status: :completed)
+        expect { sync_run.start_processing_batches! }.to raise_error(AASM::InvalidTransition)
+      end
+    end
+
+    describe '#start_archiving!' do
+      let(:sync_run) do
+        create(:playlist_sync_run,
+               status: :processing_batches,
+               batches_total: 3,
+               batches_completed: 3)
+      end
+
+      it 'transitions from processing_batches to archiving' do
+        expect { sync_run.start_archiving! }
+          .to change { sync_run.status }.from('processing_batches').to('archiving')
+      end
+
+      it 'enqueues ArchiveMissingJob' do
+        sync_run.start_archiving!
+        expect(Playlists::ArchiveMissingJob).to have_received(:perform_later).with(sync_run.id)
+      end
+
+      it 'raises error when batches not completed' do
+        sync_run.update!(batches_completed: 1)
+        expect { sync_run.start_archiving! }.to raise_error(AASM::InvalidTransition)
+      end
+
+      it 'raises error when called from wrong state' do
+        sync_run.update!(status: :pending)
+        expect { sync_run.start_archiving! }.to raise_error(AASM::InvalidTransition)
+      end
+    end
+
+    describe '#complete!' do
+      it 'transitions from archiving to completed' do
+        sync_run.update!(status: :archiving)
+        expect { sync_run.complete! }
+          .to change { sync_run.status }.from('archiving').to('completed')
+      end
+
+      it 'sets completed_at timestamp' do
+        sync_run.update!(status: :archiving)
+        freeze_time do
+          sync_run.complete!
+          expect(sync_run.completed_at).to be_within(1.second).of(Time.current)
+        end
+      end
+
+      it 'raises error when called from wrong state' do
+        expect { sync_run.complete! }.to raise_error(AASM::InvalidTransition)
+      end
+    end
+
+    describe '#fail!' do
+      it 'transitions from pending to failed' do
+        expect { sync_run.fail!('Error message') }
+          .to change { sync_run.status }.from('pending').to('failed')
+      end
+
+      it 'transitions from processing_batches to failed' do
+        sync_run.update!(status: :processing_batches)
+        expect { sync_run.fail!('Error message') }
+          .to change { sync_run.status }.from('processing_batches').to('failed')
+      end
+
+      it 'sets error_message when provided' do
+        sync_run.fail!('Authentication failed')
+        expect(sync_run.error_message).to eq('Authentication failed')
+      end
+
+      it 'can transition from any in-progress state' do
+        PlaylistSyncRun::IN_PROGRESS_STATUSES.each do |state|
+          sync = create(:playlist_sync_run, status: state)
+          expect { sync.fail! }.to change { sync.status }.to('failed')
+        end
+      end
+
+      it 'raises error when already completed' do
+        sync_run.update!(status: :completed)
+        expect { sync_run.fail! }.to raise_error(AASM::InvalidTransition)
+      end
+    end
+
+    describe '#may_start_archiving?' do
+      it 'returns true when all conditions met' do
+        sync_run.update!(
+          status: :processing_batches,
+          batches_total: 3,
+          batches_completed: 3
+        )
+        expect(sync_run.may_start_archiving?).to be true
+      end
+
+      it 'returns false when batches not completed' do
+        sync_run.update!(
+          status: :processing_batches,
+          batches_total: 3,
+          batches_completed: 1
+        )
+        expect(sync_run.may_start_archiving?).to be false
+      end
+
+      it 'returns false when in wrong state' do
+        sync_run.update!(
+          status: :pending,
+          batches_total: 3,
+          batches_completed: 3
+        )
+        expect(sync_run.may_start_archiving?).to be false
+      end
+    end
+  end
+
+  describe 'database constraint on concurrent syncs' do
+    let(:user) { create(:user) }
+
+    it 'prevents multiple in-progress syncs per user' do
+      create(:playlist_sync_run, user: user, status: :pending)
+      expect do
+        PlaylistSyncRun.create!(user: user, status: :processing_batches)
+      end.to raise_error(ActiveRecord::RecordNotUnique)
+    end
+
+    it 'allows new sync after previous completed' do
+      create(:playlist_sync_run, user: user, status: :completed)
+      expect do
+        PlaylistSyncRun.create!(user: user, status: :pending)
+      end.not_to raise_error
+    end
+
+    it 'allows syncs for different users' do
+      user2 = create(:user)
+      create(:playlist_sync_run, user: user, status: :pending)
+      expect do
+        PlaylistSyncRun.create!(user: user2, status: :pending)
+      end.not_to raise_error
     end
   end
 end

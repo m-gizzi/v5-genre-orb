@@ -3,7 +3,6 @@
 FactoryBot.define do
   factory :playlist_sync_run do
     user
-    status { :pending }
     total_playlists_expected { 0 }
     playlists_fetched { 0 }
     playlists_processed { 0 }

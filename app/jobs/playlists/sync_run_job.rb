@@ -19,7 +19,7 @@ module Playlists
     attr_reader :sync_run
 
     def handle_authentication_failure(error)
-      sync_run&.update!(status: :failed, error_message: error.message)
+      sync_run&.fail!(error.message)
     end
   end
 end

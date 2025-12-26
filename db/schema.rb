@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_26_032323) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_26_203219) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -34,7 +34,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_26_032323) do
     t.integer "playlists_fetched", default: 0
     t.integer "playlists_processed", default: 0
     t.datetime "started_at"
-    t.integer "status", default: 0, null: false
+    t.integer "status", null: false
     t.integer "total_playlists_expected", default: 0
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false

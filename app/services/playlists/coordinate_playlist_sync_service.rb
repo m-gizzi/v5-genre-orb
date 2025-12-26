@@ -11,10 +11,12 @@ module Playlists
     end
 
     def call
-      transition_to_fetching_metadata!
+      sync_run.start_fetching_metadata!
+
       first_batch_response = fetch_first_batch
       calculate_and_set_totals(first_batch_response)
-      transition_to_processing_batches! # Should I consider a state machine?
+
+      sync_run.start_processing_batches!
       process_first_batch(first_batch_response[:playlists])
       enqueue_remaining_batch_jobs
     end
@@ -22,10 +24,6 @@ module Playlists
     private
 
     attr_reader :sync_run, :spotify_client, :batch_processor
-
-    def transition_to_fetching_metadata!
-      sync_run.update!(status: :fetching_metadata, started_at: Time.current)
-    end
 
     def fetch_first_batch
       spotify_client.fetch_user_playlists(limit: BATCH_SIZE, offset: 0)
@@ -50,10 +48,6 @@ module Playlists
     def process_first_batch(playlists)
       batch_processor.process_batch(playlists)
       batch_processor.mark_batch_complete!
-    end
-
-    def transition_to_processing_batches!
-      sync_run.update!(status: :processing_batches)
     end
 
     def enqueue_remaining_batch_jobs
