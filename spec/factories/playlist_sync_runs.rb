@@ -49,11 +49,5 @@ FactoryBot.define do
       completed_at { Time.current }
       error_message { 'Authentication failed' }
     end
-
-    trait :stale do
-      status { :processing_batches }
-      started_at { 2.hours.ago }
-      created_at { 2.hours.ago }
-    end
   end
 end

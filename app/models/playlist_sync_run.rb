@@ -70,21 +70,13 @@ class PlaylistSyncRun < ApplicationRecord
   validates :batches_completed, numericality: { greater_than_or_equal_to: 0 }
 
   scope :in_progress, -> { where(status: IN_PROGRESS_STATUSES) }
-  scope :recent, -> { order(created_at: :desc) }
-  scope :stale, -> { in_progress.where(created_at: ...1.hour.ago) }
 
   def self.in_progress_for_user(user)
-    where(user: user).in_progress.recent.first
+    where(user: user).in_progress.first
   end
 
   def in_progress?
     IN_PROGRESS_STATUSES.include?(aasm.current_state)
-  end
-
-  def progress_percentage
-    return 0 if batches_total.zero?
-
-    (batches_completed.to_f / batches_total * 100).round(2)
   end
 
   def increment_batch_completion!

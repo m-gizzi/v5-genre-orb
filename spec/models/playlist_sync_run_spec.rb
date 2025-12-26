@@ -27,29 +27,6 @@ RSpec.describe PlaylistSyncRun do
         expect(described_class.in_progress).not_to include(failed_sync)
       end
     end
-
-    describe '.recent' do
-      let!(:older_sync) { create(:playlist_sync_run, created_at: 2.hours.ago) }
-      let!(:newer_sync) { create(:playlist_sync_run, created_at: 1.hour.ago) }
-      let!(:newest_sync) { create(:playlist_sync_run, created_at: Time.current) }
-
-      it 'returns syncs in descending order by created_at' do
-        expect(described_class.recent).to eq([newest_sync, newer_sync, older_sync])
-      end
-    end
-
-    describe '.stale' do
-      let!(:stale_sync) { create(:playlist_sync_run, :stale) }
-      let!(:recent_sync) { create(:playlist_sync_run, status: :processing_batches) }
-
-      it 'returns in-progress syncs older than 1 hour' do
-        expect(described_class.stale).to contain_exactly(stale_sync)
-      end
-
-      it 'does not include recent syncs' do
-        expect(described_class.stale).not_to include(recent_sync)
-      end
-    end
   end
 
   describe '.in_progress_for_user' do
@@ -59,7 +36,7 @@ RSpec.describe PlaylistSyncRun do
     let!(:user2_sync) { create(:playlist_sync_run, user: user2, status: :processing_batches) }
     let!(:user1_completed) { create(:playlist_sync_run, user: user1, status: :completed) }
 
-    it 'returns the most recent in-progress sync for the specified user' do
+    it 'returns the in-progress sync for the specified user' do
       expect(described_class.in_progress_for_user(user1)).to eq(user1_sync)
     end
 
@@ -106,28 +83,6 @@ RSpec.describe PlaylistSyncRun do
     it 'returns false for failed status' do
       sync = build(:playlist_sync_run, status: :failed)
       expect(sync).not_to be_in_progress
-    end
-  end
-
-  describe '#progress_percentage' do
-    it 'returns 0 when batches_total is 0' do
-      sync = build(:playlist_sync_run, batches_total: 0, batches_completed: 0)
-      expect(sync.progress_percentage).to eq(0)
-    end
-
-    it 'calculates percentage correctly' do
-      sync = build(:playlist_sync_run, batches_total: 10, batches_completed: 5)
-      expect(sync.progress_percentage).to eq(50.0)
-    end
-
-    it 'rounds to 2 decimal places' do
-      sync = build(:playlist_sync_run, batches_total: 3, batches_completed: 1)
-      expect(sync.progress_percentage).to eq(33.33)
-    end
-
-    it 'returns 100 when all batches completed' do
-      sync = build(:playlist_sync_run, batches_total: 10, batches_completed: 10)
-      expect(sync.progress_percentage).to eq(100.0)
     end
   end
 
