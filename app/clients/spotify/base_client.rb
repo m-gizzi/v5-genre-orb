@@ -38,7 +38,7 @@ module Spotify
       end
     end
 
-    def spotify_api_call(endpoint)
+    def handle_spotify_errors(endpoint)
       check_rate_limit_cooldown!(endpoint)
       yield
     rescue RestClient::Unauthorized

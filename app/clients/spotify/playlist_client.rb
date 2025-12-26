@@ -3,7 +3,7 @@
 module Spotify
   class PlaylistClient < BaseClient
     def fetch_user_playlists(limit: 50, offset: 0)
-      spotify_api_call('spotify:playlists') do
+      handle_spotify_errors('spotify:playlists') do
         playlists = rspotify_user.playlists(limit: limit, offset: offset)
         playlists.map { |playlist| ResponseAdapters::PlaylistAdapter.adapt(playlist) }
       end
@@ -26,7 +26,7 @@ module Spotify
     end
 
     def create_playlist(name:, description: nil, public: true)
-      spotify_api_call('spotify:playlists') do
+      handle_spotify_errors('spotify:playlists') do
         playlist = rspotify_user.create_playlist!(name, public: public, description: description)
         ResponseAdapters::PlaylistAdapter.adapt(playlist)
       end
