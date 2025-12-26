@@ -131,14 +131,14 @@ RSpec.describe Spotify::BaseClient do
           RestClient::TooManyRequests.new(response)
         end
 
-        it 'uses default retry_after of 60 seconds' do
+        it 'passes nil to set_cooldown! which uses default' do
           begin
             client.send(:spotify_api_call, endpoint) { raise rest_client_error }
           rescue Spotify::Errors::RateLimitError
             # Expected error
           end
 
-          expect(RateLimitCooldown).to have_received(:set_cooldown!).with(endpoint, 60)
+          expect(RateLimitCooldown).to have_received(:set_cooldown!).with(endpoint, nil)
         end
       end
     end

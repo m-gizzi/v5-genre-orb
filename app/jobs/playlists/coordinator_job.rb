@@ -23,8 +23,8 @@ module Playlists
       transition_to_fetching_metadata!
       first_batch = fetch_first_batch
       calculate_and_set_totals(first_batch)
-      enqueue_batch_jobs
       transition_to_processing_batches!
+      enqueue_batch_jobs
     end
 
     def transition_to_fetching_metadata!
@@ -52,9 +52,9 @@ module Playlists
       # If first batch has fewer than BATCH_SIZE items, that's all there is
       return first_batch.size if first_batch.size < BATCH_SIZE
 
-      # Otherwise, estimate based on pattern (will be refined as batches complete)
-      # For now, assume at least one more batch exists
-      BATCH_SIZE
+      # Otherwise, first batch is full - conservatively assume at least 2 batches exist
+      # This ensures we don't miss playlists; empty batches complete without creating data
+      BATCH_SIZE * 2
     end
 
     def calculate_batches_needed(total_count)

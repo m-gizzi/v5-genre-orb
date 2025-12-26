@@ -68,20 +68,20 @@ RSpec.describe Playlists::CoordinatorJob do
         allow(spotify_client).to receive(:fetch_user_playlists).with(limit: 50, offset: 0).and_return(playlists)
       end
 
-      it 'sets total_playlists_expected to 50' do
+      it 'sets total_playlists_expected to 100 (conservatively assumes more exist)' do
         described_class.perform_now(sync_run.id)
-        expect(sync_run.reload.total_playlists_expected).to eq(50)
+        expect(sync_run.reload.total_playlists_expected).to eq(100)
       end
 
-      it 'sets batches_total to 1 (assumes at least one more batch exists)' do
+      it 'sets batches_total to 2 (conservative estimate to avoid missing data)' do
         described_class.perform_now(sync_run.id)
-        expect(sync_run.reload.batches_total).to eq(1)
+        expect(sync_run.reload.batches_total).to eq(2)
       end
 
-      it 'enqueues one FetchBatchJob' do
+      it 'enqueues two FetchBatchJobs' do
         expect do
           described_class.perform_now(sync_run.id)
-        end.to have_enqueued_job(Playlists::FetchBatchJob).exactly(1).times
+        end.to have_enqueued_job(Playlists::FetchBatchJob).exactly(2).times
       end
     end
 
