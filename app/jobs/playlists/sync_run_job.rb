@@ -10,23 +10,13 @@ module Playlists
 
     def perform(sync_run_id, *args)
       @sync_run = PlaylistSyncRun.find(sync_run_id)
-      @user = @sync_run.user
 
       call(*args)
     end
 
     private
 
-    attr_reader :sync_run, :user
-
-    def initialize_sync_run(sync_run_id)
-      @sync_run = PlaylistSyncRun.find(sync_run_id)
-      @user = @sync_run.user
-    end
-
-    def spotify_client
-      @spotify_client ||= Spotify::PlaylistClient.for_user(user)
-    end
+    attr_reader :sync_run
 
     def handle_authentication_failure(error)
       sync_run&.update!(status: :failed, error_message: error.message)

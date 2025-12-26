@@ -26,6 +26,8 @@ module Spotify
     private
 
     def parse_json_response(raw_response)
+      return raw_response if raw_response.is_a?(Hash) || raw_response.is_a?(Array)
+
       JSON.parse(raw_response)
     rescue JSON::ParserError => e
       raise Spotify::Errors::ApiError, "Failed to parse Spotify response: #{e.message}"

@@ -37,9 +37,15 @@ RSpec.describe 'Playlist sync flow' do
 
     before do
       allow(spotify_client).to receive(:fetch_user_playlists)
-        .with(limit: 50, offset: 0).and_return(playlists_batch1)
+        .with(limit: 50, offset: 0).and_return({
+          playlists: playlists_batch1,
+          pagination: { total: 75, limit: 50, offset: 0, next: 'next_url', previous: nil }
+        })
       allow(spotify_client).to receive(:fetch_user_playlists)
-        .with(limit: 50, offset: 50).and_return(playlists_batch2)
+        .with(limit: 50, offset: 50).and_return({
+          playlists: playlists_batch2,
+          pagination: { total: 75, limit: 50, offset: 50, next: nil, previous: 'prev_url' }
+        })
     end
 
     it 'completes full sync from start to finish' do
@@ -160,7 +166,10 @@ RSpec.describe 'Playlist sync flow' do
 
       before do
         allow(spotify_client).to receive(:fetch_user_playlists)
-          .with(limit: 50, offset: 0).and_return(small_batch)
+          .with(limit: 50, offset: 0).and_return({
+            playlists: small_batch,
+            pagination: { total: 10, limit: 50, offset: 0, next: nil, previous: nil }
+          })
       end
 
       it 'completes sync successfully' do
@@ -178,7 +187,10 @@ RSpec.describe 'Playlist sync flow' do
     context 'when user has no playlists' do
       before do
         allow(spotify_client).to receive(:fetch_user_playlists)
-          .with(limit: 50, offset: 0).and_return([])
+          .with(limit: 50, offset: 0).and_return({
+            playlists: [],
+            pagination: { total: 0, limit: 50, offset: 0, next: nil, previous: nil }
+          })
       end
 
       it 'completes sync successfully' do
@@ -203,7 +215,10 @@ RSpec.describe 'Playlist sync flow' do
 
     before do
       allow(spotify_client).to receive(:fetch_user_playlists)
-        .with(limit: 50, offset: 0).and_return(playlists)
+        .with(limit: 50, offset: 0).and_return({
+          playlists: playlists,
+          pagination: { total: 10, limit: 50, offset: 0, next: nil, previous: nil }
+        })
     end
 
     it 'prevents duplicate syncs for same user' do
