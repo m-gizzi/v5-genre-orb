@@ -76,5 +76,23 @@ module Spotify
     def handle_api_error(error)
       raise Errors::ApiError, "Spotify API error: #{error.message}"
     end
+
+    def parse_json_response(raw_response)
+      return raw_response if raw_response.is_a?(Hash) || raw_response.is_a?(Array)
+
+      JSON.parse(raw_response)
+    rescue JSON::ParserError => e
+      raise Spotify::Errors::ApiError, "Failed to parse Spotify response: #{e.message}"
+    end
+
+    def extract_pagination_metadata(response)
+      {
+        total: response['total'],
+        limit: response['limit'],
+        offset: response['offset'],
+        next: response['next'],
+        previous: response['previous']
+      }
+    end
   end
 end
