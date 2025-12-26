@@ -7,11 +7,13 @@ module Spotify
     class ApiError < BaseError; end
 
     class RateLimitError < BaseError
+      DEFAULT_RETRY_AFTER = 60
+
       attr_reader :retry_after
 
       def initialize(message = 'Rate limit exceeded', retry_after: nil)
         super(message)
-        @retry_after = retry_after
+        @retry_after = retry_after || DEFAULT_RETRY_AFTER
       end
     end
 

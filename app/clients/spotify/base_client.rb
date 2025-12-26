@@ -64,7 +64,7 @@ module Spotify
     end
 
     def handle_rate_limit_error(error, endpoint)
-      retry_after = error.response.headers[:retry_after]&.to_i || 60
+      retry_after = error.response.headers[:retry_after]&.to_i
       RateLimitCooldown.set_cooldown!(endpoint, retry_after)
 
       raise Errors::RateLimitError.new(

@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class RateLimitCooldown < ApplicationRecord
+  DEFAULT_RETRY_AFTER = 60
+
   validates :endpoint, presence: true, uniqueness: true
   validates :expires_at, presence: true
   validates :retry_after_seconds, presence: true, numericality: { greater_than: 0 }
@@ -14,6 +16,7 @@ class RateLimitCooldown < ApplicationRecord
     end
 
     def set_cooldown!(endpoint, retry_after_seconds)
+      retry_after_seconds ||= DEFAULT_RETRY_AFTER
       expires_at = Time.current + retry_after_seconds.seconds
 
       transaction do
