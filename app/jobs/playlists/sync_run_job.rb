@@ -12,7 +12,7 @@ module Playlists
       @sync_run = PlaylistSyncRun.find(sync_run_id)
       @user = @sync_run.user
 
-      call(args)
+      call(*args)
     end
 
     private

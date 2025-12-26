@@ -84,10 +84,10 @@ RSpec.describe Spotify::PlaylistClient do
     end
 
     context 'when rate limit cooldown is active' do
-      let(:cooldown) { create(:rate_limit_cooldown, :in_progress, endpoint: 'spotify:playlists') }
+      let(:cooldown) { create(:rate_limit_cooldown, :in_progress, endpoint: 'spotify:users:playlists') }
 
       before do
-        allow(RateLimitCooldown).to receive(:find_in_progress).with('spotify:playlists').and_return(cooldown)
+        allow(RateLimitCooldown).to receive(:find_in_progress).with('spotify:users:playlists').and_return(cooldown)
       end
 
       it 'raises RateLimitCooldownActive without calling API' do
@@ -116,7 +116,7 @@ RSpec.describe Spotify::PlaylistClient do
           # Expected error
         end
 
-        expect(RateLimitCooldown).to have_received(:set_cooldown!).with('spotify:playlists', retry_after)
+        expect(RateLimitCooldown).to have_received(:set_cooldown!).with('spotify:users:playlists', retry_after)
       end
 
       it 'raises RateLimitError' do
@@ -204,10 +204,10 @@ RSpec.describe Spotify::PlaylistClient do
     end
 
     context 'when rate limit cooldown is active' do
-      let(:cooldown) { create(:rate_limit_cooldown, :in_progress, endpoint: 'spotify:playlists') }
+      let(:cooldown) { create(:rate_limit_cooldown, :in_progress, endpoint: 'spotify:users:create_playlist') }
 
       before do
-        allow(RateLimitCooldown).to receive(:find_in_progress).with('spotify:playlists').and_return(cooldown)
+        allow(RateLimitCooldown).to receive(:find_in_progress).with('spotify:users:create_playlist').and_return(cooldown)
       end
 
       it 'raises RateLimitCooldownActive without calling API' do
@@ -236,7 +236,7 @@ RSpec.describe Spotify::PlaylistClient do
           # Expected error
         end
 
-        expect(RateLimitCooldown).to have_received(:set_cooldown!).with('spotify:playlists', retry_after)
+        expect(RateLimitCooldown).to have_received(:set_cooldown!).with('spotify:users:create_playlist', retry_after)
       end
 
       it 'raises RateLimitError' do
