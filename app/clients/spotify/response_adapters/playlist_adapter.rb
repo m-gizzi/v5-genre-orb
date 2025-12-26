@@ -3,49 +3,49 @@
 module Spotify
   module ResponseAdapters
     class PlaylistAdapter
-      def self.adapt(rspotify_playlist)
-        new(rspotify_playlist).adapt
+      def self.adapt(json_hash)
+        new(json_hash).adapt
       end
 
-      attr_reader :playlist
+      attr_reader :data
 
-      def initialize(rspotify_playlist)
-        @playlist = rspotify_playlist
+      def initialize(json_hash)
+        @data = json_hash
       end
 
       def adapt
         {
-          spotify_id: playlist.id,
-          name: playlist.name,
-          description: playlist.description,
-          public: playlist.public,
-          collaborative: playlist.collaborative,
+          spotify_id: data['id'],
+          name: data['name'],
+          description: data['description'],
+          public: data['public'],
+          collaborative: data['collaborative'],
           owner: owner_data,
-          snapshot_id: playlist.snapshot_id,
-          tracks_total: playlist.total,
+          snapshot_id: data['snapshot_id'],
+          tracks_total: data.dig('tracks', 'total'),
           images: images_data,
-          external_urls: playlist.external_urls,
-          uri: playlist.uri,
-          href: playlist.href
+          external_urls: data['external_urls'],
+          uri: data['uri'],
+          href: data['href']
         }
       end
 
       private
 
       def owner_data
-        return nil unless playlist.owner
+        return nil unless data['owner']
 
         {
-          id: playlist.owner.id,
-          display_name: playlist.owner.display_name,
-          uri: playlist.owner.uri
+          id: data['owner']['id'],
+          display_name: data['owner']['display_name'],
+          uri: data['owner']['uri']
         }
       end
 
       def images_data
-        return [] unless playlist.images
+        return [] unless data['images']
 
-        playlist.images.map do |image|
+        data['images'].map do |image|
           {
             url: image['url'],
             height: image['height'],

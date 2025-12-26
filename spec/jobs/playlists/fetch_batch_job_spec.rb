@@ -26,9 +26,22 @@ RSpec.describe Playlists::FetchBatchJob do
     ]
   end
 
+  let(:response) do
+    {
+      playlists: playlist_data,
+      pagination: {
+        total: 100,
+        limit: limit,
+        offset: offset,
+        next: nil,
+        previous: nil
+      }
+    }
+  end
+
   before do
     allow(Spotify::PlaylistClient).to receive(:for_user).with(user).and_return(spotify_client)
-    allow(spotify_client).to receive(:fetch_user_playlists).with(limit: limit, offset: offset).and_return(playlist_data)
+    allow(spotify_client).to receive(:fetch_user_playlists).with(limit: limit, offset: offset).and_return(response)
   end
 
   describe '#perform' do
@@ -88,8 +101,21 @@ RSpec.describe Playlists::FetchBatchJob do
     end
 
     context 'when batch is empty' do
+      let(:empty_response) do
+        {
+          playlists: [],
+          pagination: {
+            total: 0,
+            limit: limit,
+            offset: offset,
+            next: nil,
+            previous: nil
+          }
+        }
+      end
+
       before do
-        allow(spotify_client).to receive(:fetch_user_playlists).and_return([])
+        allow(spotify_client).to receive(:fetch_user_playlists).and_return(empty_response)
       end
 
       it 'does not create any playlists' do

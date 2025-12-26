@@ -19,8 +19,21 @@ RSpec.describe Playlists::CoordinatorJob do
         end
       end
 
+      let(:response) do
+        {
+          playlists: playlists,
+          pagination: {
+            total: 25,
+            limit: 50,
+            offset: 0,
+            next: nil,
+            previous: nil
+          }
+        }
+      end
+
       before do
-        allow(spotify_client).to receive(:fetch_user_playlists).with(limit: 50, offset: 0).and_return(playlists)
+        allow(spotify_client).to receive(:fetch_user_playlists).with(limit: 50, offset: 0).and_return(response)
       end
 
       it 'transitions to fetching_metadata status' do
@@ -35,7 +48,7 @@ RSpec.describe Playlists::CoordinatorJob do
         end
       end
 
-      it 'sets total_playlists_expected based on first batch size' do
+      it 'sets total_playlists_expected from pagination metadata' do
         described_class.perform_now(sync_run.id)
         expect(sync_run.reload.total_playlists_expected).to eq(25)
       end
@@ -64,30 +77,56 @@ RSpec.describe Playlists::CoordinatorJob do
         end
       end
 
+      let(:response) do
+        {
+          playlists: playlists,
+          pagination: {
+            total: 50,
+            limit: 50,
+            offset: 0,
+            next: nil,
+            previous: nil
+          }
+        }
+      end
+
       before do
-        allow(spotify_client).to receive(:fetch_user_playlists).with(limit: 50, offset: 0).and_return(playlists)
+        allow(spotify_client).to receive(:fetch_user_playlists).with(limit: 50, offset: 0).and_return(response)
       end
 
-      it 'sets total_playlists_expected to 100 (conservatively assumes more exist)' do
+      it 'sets total_playlists_expected to 50 (accurate from API)' do
         described_class.perform_now(sync_run.id)
-        expect(sync_run.reload.total_playlists_expected).to eq(100)
+        expect(sync_run.reload.total_playlists_expected).to eq(50)
       end
 
-      it 'sets batches_total to 2 (conservative estimate to avoid missing data)' do
+      it 'sets batches_total to 1 (accurate from API)' do
         described_class.perform_now(sync_run.id)
-        expect(sync_run.reload.batches_total).to eq(2)
+        expect(sync_run.reload.batches_total).to eq(1)
       end
 
-      it 'enqueues two FetchBatchJobs' do
+      it 'enqueues one FetchBatchJob' do
         expect do
           described_class.perform_now(sync_run.id)
-        end.to have_enqueued_job(Playlists::FetchBatchJob).exactly(2).times
+        end.to have_enqueued_job(Playlists::FetchBatchJob).exactly(1).times
       end
     end
 
     context 'when user has 0 playlists' do
+      let(:response) do
+        {
+          playlists: [],
+          pagination: {
+            total: 0,
+            limit: 50,
+            offset: 0,
+            next: nil,
+            previous: nil
+          }
+        }
+      end
+
       before do
-        allow(spotify_client).to receive(:fetch_user_playlists).with(limit: 50, offset: 0).and_return([])
+        allow(spotify_client).to receive(:fetch_user_playlists).with(limit: 50, offset: 0).and_return(response)
       end
 
       it 'sets total_playlists_expected to 0' do
@@ -120,8 +159,21 @@ RSpec.describe Playlists::CoordinatorJob do
         end
       end
 
+      let(:response) do
+        {
+          playlists: playlists,
+          pagination: {
+            total: 10,
+            limit: 50,
+            offset: 0,
+            next: nil,
+            previous: nil
+          }
+        }
+      end
+
       before do
-        allow(spotify_client).to receive(:fetch_user_playlists).with(limit: 50, offset: 0).and_return(playlists)
+        allow(spotify_client).to receive(:fetch_user_playlists).with(limit: 50, offset: 0).and_return(response)
       end
 
       it 'still fetches and processes' do

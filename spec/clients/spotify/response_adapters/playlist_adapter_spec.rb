@@ -4,7 +4,7 @@ require 'rails_helper'
 
 RSpec.describe Spotify::ResponseAdapters::PlaylistAdapter do
   describe '.adapt' do
-    subject(:adapted_playlist) { described_class.adapt(rspotify_playlist) }
+    subject(:adapted_playlist) { described_class.adapt(playlist_data) }
 
     let(:owner_data) do
       {
@@ -35,9 +35,8 @@ RSpec.describe Spotify::ResponseAdapters::PlaylistAdapter do
     end
 
     let(:playlist_data) { base_playlist_data }
-    let(:rspotify_playlist) { RSpotify::Playlist.new(playlist_data) }
 
-    it 'transforms RSpotify::Playlist into a hash' do
+    it 'transforms JSON hash into a hash' do
       expect(adapted_playlist).to be_a(Hash)
       expect(adapted_playlist[:spotify_id]).to eq('playlist123')
       expect(adapted_playlist[:name]).to eq('Test Playlist')

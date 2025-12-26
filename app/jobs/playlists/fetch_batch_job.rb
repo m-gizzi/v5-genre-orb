@@ -22,7 +22,8 @@ module Playlists
     end
 
     def fetch_playlists_from_spotify
-      spotify_client.fetch_user_playlists(limit: limit, offset: offset)
+      response = spotify_client.fetch_user_playlists(limit: limit, offset: offset)
+      response[:playlists]
     end
 
     def process_playlists(playlists)

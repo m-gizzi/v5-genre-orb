@@ -7,7 +7,7 @@ RSpec.describe Spotify::PlaylistClient do
   let(:client) { described_class.for_user(user) }
 
   describe '#fetch_user_playlists' do
-    subject(:playlists) { client.fetch_user_playlists(limit: limit, offset: offset) }
+    subject(:response) { client.fetch_user_playlists(limit: limit, offset: offset) }
 
     let(:limit) { 50 }
     let(:offset) { 0 }
@@ -27,29 +27,53 @@ RSpec.describe Spotify::PlaylistClient do
         'href' => 'https://api.spotify.com/v1/playlists/playlist123'
       }
     end
-    let(:rspotify_playlist) { RSpotify::Playlist.new(base_playlist_data) }
+
+    let(:raw_json_response) do
+      {
+        'href' => 'https://api.spotify.com/v1/users/user123/playlists?offset=0&limit=50',
+        'limit' => limit,
+        'next' => nil,
+        'offset' => offset,
+        'previous' => nil,
+        'total' => 1,
+        'items' => [base_playlist_data]
+      }.to_json
+    end
 
     before do
       allow(client.rspotify_user).to receive(:playlists)
         .with(limit: limit, offset: offset)
-        .and_return([rspotify_playlist])
+        .and_return(raw_json_response)
     end
 
-    it 'returns an array of playlist hashes' do
-      expect(playlists).to be_an(Array)
-      expect(playlists.first).to be_a(Hash)
+    it 'returns a hash with playlists and pagination' do
+      expect(response).to be_a(Hash)
+      expect(response).to have_key(:playlists)
+      expect(response).to have_key(:pagination)
     end
 
-    it 'uses PlaylistAdapter to transform playlists' do
-      expect(playlists.first).to include(
+    it 'includes playlist hashes in the playlists array' do
+      expect(response[:playlists]).to be_an(Array)
+      expect(response[:playlists].first).to be_a(Hash)
+      expect(response[:playlists].first).to include(
         spotify_id: 'playlist123',
         name: 'Test Playlist',
         description: 'Test Description'
       )
     end
 
+    it 'includes pagination metadata' do
+      expect(response[:pagination]).to eq(
+        total: 1,
+        limit: 50,
+        offset: 0,
+        next: nil,
+        previous: nil
+      )
+    end
+
     it 'calls rspotify_user.playlists with correct parameters' do
-      playlists
+      response
       expect(client.rspotify_user).to have_received(:playlists).with(limit: 50, offset: 0)
     end
 
@@ -57,19 +81,40 @@ RSpec.describe Spotify::PlaylistClient do
       let(:limit) { 20 }
       let(:offset) { 40 }
 
+      let(:raw_json_response) do
+        {
+          'href' => 'https://api.spotify.com/v1/users/user123/playlists?offset=40&limit=20',
+          'limit' => 20,
+          'next' => 'https://api.spotify.com/v1/users/user123/playlists?offset=60&limit=20',
+          'offset' => 40,
+          'previous' => 'https://api.spotify.com/v1/users/user123/playlists?offset=20&limit=20',
+          'total' => 100,
+          'items' => [base_playlist_data]
+        }.to_json
+      end
+
       it 'passes custom parameters to RSpotify' do
-        playlists
+        response
         expect(client.rspotify_user).to have_received(:playlists).with(limit: 20, offset: 40)
       end
     end
 
     context 'when no playlists exist' do
-      before do
-        allow(client.rspotify_user).to receive(:playlists).and_return([])
+      let(:raw_json_response) do
+        {
+          'href' => 'https://api.spotify.com/v1/users/user123/playlists?offset=0&limit=50',
+          'limit' => 50,
+          'next' => nil,
+          'offset' => 0,
+          'previous' => nil,
+          'total' => 0,
+          'items' => []
+        }.to_json
       end
 
-      it 'returns an empty array' do
-        expect(playlists).to eq([])
+      it 'returns empty playlists array' do
+        expect(response[:playlists]).to eq([])
+        expect(response[:pagination][:total]).to eq(0)
       end
     end
 
@@ -79,7 +124,7 @@ RSpec.describe Spotify::PlaylistClient do
       end
 
       it 'raises AuthenticationError' do
-        expect { playlists }.to raise_error(Spotify::Errors::AuthenticationError)
+        expect { response }.to raise_error(Spotify::Errors::AuthenticationError)
       end
     end
 
@@ -91,7 +136,7 @@ RSpec.describe Spotify::PlaylistClient do
       end
 
       it 'raises RateLimitCooldownActive without calling API' do
-        expect { playlists }.to raise_error(Spotify::Errors::RateLimitCooldownActive)
+        expect { response }.to raise_error(Spotify::Errors::RateLimitCooldownActive)
         expect(client.rspotify_user).not_to have_received(:playlists)
       end
     end
@@ -111,7 +156,7 @@ RSpec.describe Spotify::PlaylistClient do
 
       it 'creates a rate limit cooldown' do
         begin
-          playlists
+          response
         rescue Spotify::Errors::RateLimitError
           # Expected error
         end
@@ -120,7 +165,7 @@ RSpec.describe Spotify::PlaylistClient do
       end
 
       it 'raises RateLimitError' do
-        expect { playlists }.to raise_error(Spotify::Errors::RateLimitError)
+        expect { response }.to raise_error(Spotify::Errors::RateLimitError)
       end
     end
   end
@@ -147,12 +192,13 @@ RSpec.describe Spotify::PlaylistClient do
         'href' => 'https://api.spotify.com/v1/playlists/new_playlist_id'
       }
     end
-    let(:rspotify_playlist) { RSpotify::Playlist.new(new_playlist_data) }
+
+    let(:raw_json_response) { new_playlist_data.to_json }
 
     before do
       allow(client.rspotify_user).to receive(:create_playlist!)
         .with(name, public: is_public, description: description)
-        .and_return(rspotify_playlist)
+        .and_return(raw_json_response)
     end
 
     it 'returns a playlist hash' do
@@ -173,7 +219,7 @@ RSpec.describe Spotify::PlaylistClient do
       before do
         allow(client.rspotify_user).to receive(:create_playlist!)
           .with(name, public: true, description: nil)
-          .and_return(rspotify_playlist)
+          .and_return(raw_json_response)
       end
 
       it 'uses default values for public and description' do

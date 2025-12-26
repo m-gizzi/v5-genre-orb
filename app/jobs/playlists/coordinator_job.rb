@@ -28,25 +28,14 @@ module Playlists
       spotify_client.fetch_user_playlists(limit: BATCH_SIZE, offset: 0)
     end
 
-    def calculate_and_set_totals(first_batch)
-      # For now, we estimate based on first batch
-      # TODO: Enhance PlaylistClient to return total count from API response
-      total_count = estimate_total_count(first_batch)
+    def calculate_and_set_totals(first_batch_response)
+      total_count = first_batch_response[:pagination][:total]
       batches_needed = calculate_batches_needed(total_count)
 
       sync_run.update!(
         total_playlists_expected: total_count,
         batches_total: batches_needed
       )
-    end
-
-    def estimate_total_count(first_batch)
-      # If first batch has fewer than BATCH_SIZE items, that's all there is
-      return first_batch.size if first_batch.size < BATCH_SIZE
-
-      # Otherwise, first batch is full - conservatively assume at least 2 batches exist
-      # This ensures we don't miss playlists; empty batches complete without creating data
-      BATCH_SIZE * 2
     end
 
     def calculate_batches_needed(total_count)

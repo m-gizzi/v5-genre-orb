@@ -6,6 +6,7 @@ Rails.application.config.to_prepare do
 
   if client_id.present? && client_secret.present?
     RSpotify.authenticate(client_id, client_secret)
+    RSpotify.raw_response = true
     Rails.logger.debug { 'RSpotify initialized with Spotify API credentials' }
   else
     Rails.logger.warn 'RSpotify credentials not found. Spotify integration will not work.'

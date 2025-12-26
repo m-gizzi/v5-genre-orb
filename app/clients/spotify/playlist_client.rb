@@ -4,16 +4,47 @@ module Spotify
   class PlaylistClient < BaseClient
     def fetch_user_playlists(limit: 50, offset: 0)
       handle_spotify_errors('spotify:users:playlists') do
-        playlists = rspotify_user.playlists(limit: limit, offset: offset)
-        playlists.map { |playlist| ResponseAdapters::PlaylistAdapter.adapt(playlist) }
+        raw_response = rspotify_user.playlists(limit: limit, offset: offset)
+        parsed_response = parse_json_response(raw_response)
+
+        {
+          playlists: adapt_playlists(parsed_response['items']),
+          pagination: extract_pagination_metadata(parsed_response)
+        }
       end
     end
 
     def create_playlist(name:, description: nil, public: true)
       handle_spotify_errors('spotify:users:create_playlist') do
-        playlist = rspotify_user.create_playlist!(name, public: public, description: description)
-        ResponseAdapters::PlaylistAdapter.adapt(playlist)
+        raw_response = rspotify_user.create_playlist!(name, public: public, description: description)
+        parsed_response = parse_json_response(raw_response)
+
+        ResponseAdapters::PlaylistAdapter.adapt(parsed_response)
       end
+    end
+
+    private
+
+    def parse_json_response(raw_response)
+      JSON.parse(raw_response)
+    rescue JSON::ParserError => e
+      raise Spotify::Errors::ApiError, "Failed to parse Spotify response: #{e.message}"
+    end
+
+    def adapt_playlists(items)
+      return [] if items.nil?
+
+      items.map { |item| ResponseAdapters::PlaylistAdapter.adapt(item) }
+    end
+
+    def extract_pagination_metadata(response)
+      {
+        total: response['total'],
+        limit: response['limit'],
+        offset: response['offset'],
+        next: response['next'],
+        previous: response['previous']
+      }
     end
   end
 end
