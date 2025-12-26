@@ -2,6 +2,8 @@
 
 class PlaylistSyncRun < ApplicationRecord
   belongs_to :user
+  has_many :playlist_sync_items, dependent: :destroy
+  has_many :playlists, through: :playlist_sync_items
 
   IN_PROGRESS_STATUSES = %i[pending fetching_metadata processing_batches archiving].freeze
 

@@ -46,6 +46,11 @@ module Playlists
         archived_at: nil
       )
       playlist.save!
+
+      PlaylistSyncItem.find_or_create_by!(
+        playlist_sync_run_id: sync_run.id,
+        playlist_id: playlist.id
+      )
     end
 
     def increment_progress_counter(counter_name)

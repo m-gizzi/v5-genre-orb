@@ -10,9 +10,19 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_24_065902) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_26_032323) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "playlist_sync_items", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "playlist_id", null: false
+    t.bigint "playlist_sync_run_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["playlist_id"], name: "index_playlist_sync_items_on_playlist_id"
+    t.index ["playlist_sync_run_id", "playlist_id"], name: "index_sync_items_on_sync_run_and_playlist_unique", unique: true
+    t.index ["playlist_sync_run_id"], name: "index_playlist_sync_items_on_playlist_sync_run_id"
+  end
 
   create_table "playlist_sync_runs", force: :cascade do |t|
     t.integer "batches_completed", default: 0
@@ -70,6 +80,8 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_24_065902) do
     t.index ["spotify_id"], name: "index_users_on_spotify_id", unique: true
   end
 
+  add_foreign_key "playlist_sync_items", "playlist_sync_runs"
+  add_foreign_key "playlist_sync_items", "playlists"
   add_foreign_key "playlist_sync_runs", "users"
   add_foreign_key "playlists", "users"
 end
