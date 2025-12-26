@@ -1,14 +1,11 @@
 # frozen_string_literal: true
 
 module Playlists
-  class FetchBatchJob < ApplicationJob
-    include SpotifyJobErrorHandling
-
+  class FetchBatchJob < SyncRunJob
     queue_as :default
 
     def perform(sync_run_id, offset, limit = 50)
-      @sync_run = PlaylistSyncRun.find(sync_run_id)
-      @user = @sync_run.user
+      initialize_sync_run(sync_run_id)
       @offset = offset
       @limit = limit
 
@@ -17,7 +14,7 @@ module Playlists
 
     private
 
-    attr_reader :sync_run, :user, :offset, :limit
+    attr_reader :offset, :limit
 
     def fetch_and_process_batch
       playlists = fetch_playlists_from_spotify
@@ -26,8 +23,7 @@ module Playlists
     end
 
     def fetch_playlists_from_spotify
-      client = Spotify::PlaylistClient.for_user(user)
-      client.fetch_user_playlists(limit: limit, offset: offset)
+      spotify_client.fetch_user_playlists(limit: limit, offset: offset)
     end
 
     def process_playlists(playlists)

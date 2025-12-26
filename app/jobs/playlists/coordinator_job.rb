@@ -1,23 +1,17 @@
 # frozen_string_literal: true
 
 module Playlists
-  class CoordinatorJob < ApplicationJob
-    include SpotifyJobErrorHandling
-
+  class CoordinatorJob < SyncRunJob
     queue_as :default
 
     BATCH_SIZE = 50
 
     def perform(sync_run_id)
-      @sync_run = PlaylistSyncRun.find(sync_run_id)
-      @user = @sync_run.user
-
+      initialize_sync_run(sync_run_id)
       fetch_metadata_and_enqueue_batches
     end
 
     private
-
-    attr_reader :sync_run, :user
 
     def fetch_metadata_and_enqueue_batches
       transition_to_fetching_metadata!
@@ -32,8 +26,7 @@ module Playlists
     end
 
     def fetch_first_batch
-      client = Spotify::PlaylistClient.for_user(user)
-      client.fetch_user_playlists(limit: BATCH_SIZE, offset: 0)
+      spotify_client.fetch_user_playlists(limit: BATCH_SIZE, offset: 0)
     end
 
     def calculate_and_set_totals(first_batch)

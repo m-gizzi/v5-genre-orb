@@ -1,22 +1,16 @@
 # frozen_string_literal: true
 
 module Playlists
-  class ArchiveMissingJob < ApplicationJob
-    include SpotifyJobErrorHandling
-
+  class ArchiveMissingJob < SyncRunJob
     queue_as :default
 
     def perform(sync_run_id)
-      @sync_run = PlaylistSyncRun.find(sync_run_id)
-      @user = @sync_run.user
-
+      initialize_sync_run(sync_run_id)
       archive_missing_playlists
       mark_sync_completed
     end
 
     private
-
-    attr_reader :sync_run, :user
 
     def archive_missing_playlists
       synced_playlist_ids = sync_run.playlist_sync_items.pluck(:playlist_id)
