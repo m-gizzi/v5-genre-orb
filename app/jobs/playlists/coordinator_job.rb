@@ -6,8 +6,7 @@ module Playlists
 
     BATCH_SIZE = 50
 
-    def perform(sync_run_id)
-      initialize_sync_run(sync_run_id)
+    def call
       fetch_metadata_and_enqueue_batches
     end
 

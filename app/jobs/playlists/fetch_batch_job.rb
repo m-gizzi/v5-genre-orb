@@ -4,8 +4,7 @@ module Playlists
   class FetchBatchJob < SyncRunJob
     queue_as :default
 
-    def perform(sync_run_id, offset, limit = 50)
-      initialize_sync_run(sync_run_id)
+    def call(offset, limit = 50)
       @offset = offset
       @limit = limit
 

@@ -8,6 +8,13 @@ module Playlists
       job.handle_authentication_failure(error)
     end
 
+    def perform(sync_run_id, *args)
+      @sync_run = PlaylistSyncRun.find(sync_run_id)
+      @user = @sync_run.user
+
+      call(args)
+    end
+
     private
 
     attr_reader :sync_run, :user
