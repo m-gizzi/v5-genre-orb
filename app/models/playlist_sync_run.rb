@@ -75,25 +75,10 @@ class PlaylistSyncRun < ApplicationRecord
     where(user: user).in_progress.first
   end
 
-  def in_progress?
-    IN_PROGRESS_STATUSES.include?(aasm.current_state)
-  end
-
   def increment_batch_completion!
     with_lock do
       increment!(:batches_completed)
       start_archiving! if may_start_archiving?
-    end
-  end
-
-  def mark_batch_error!(batch_offset, error_message)
-    with_lock do
-      errors = metadata.fetch('batch_errors', {})
-      errors[batch_offset.to_s] = {
-        'message' => error_message,
-        'timestamp' => Time.current.iso8601
-      }
-      update!(metadata: metadata.merge('batch_errors' => errors))
     end
   end
 

@@ -8,7 +8,6 @@ class RateLimitCooldown < ApplicationRecord
   validates :retry_after_seconds, presence: true, numericality: { greater_than: 0 }
 
   scope :in_progress, -> { where(expires_at: Time.current..) }
-  scope :expired, -> { where(expires_at: ...Time.current) }
 
   class << self
     def find_in_progress(endpoint)
@@ -35,14 +34,6 @@ class RateLimitCooldown < ApplicationRecord
         cooldown
       end
     end
-
-    def cleanup_expired!
-      expired.delete_all
-    end
-  end
-
-  def in_progress?
-    expires_at > Time.current
   end
 
   def seconds_remaining

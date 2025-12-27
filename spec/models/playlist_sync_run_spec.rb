@@ -25,6 +25,10 @@ RSpec.describe PlaylistSyncRun do
   describe '#increment_batch_completion!' do
     let(:sync) { create(:playlist_sync_run, :processing_batches, batches_total: 3, batches_completed: 1) }
 
+    before do
+      allow(Playlists::ArchiveMissingJob).to receive(:perform_later)
+    end
+
     it 'increments batches_completed counter' do
       expect { sync.increment_batch_completion! }.to change { sync.reload.batches_completed }.by(1)
     end
@@ -53,37 +57,6 @@ RSpec.describe PlaylistSyncRun do
     end
   end
 
-  describe '#mark_batch_error!' do
-    let(:sync) { create(:playlist_sync_run) }
-    let(:error_message) { 'Rate limit exceeded' }
-    let(:batch_offset) { 50 }
-
-    it 'stores error in metadata' do
-      sync.mark_batch_error!(batch_offset, error_message)
-
-      expect(sync.reload.metadata['batch_errors']['50']).to include(
-        'message' => error_message
-      )
-    end
-
-    it 'includes timestamp' do
-      freeze_time do
-        sync.mark_batch_error!(batch_offset, error_message)
-
-        expect(sync.reload.metadata['batch_errors']['50']['timestamp'])
-          .to eq(Time.current.iso8601)
-      end
-    end
-
-    it 'allows multiple errors for different batches' do
-      sync.mark_batch_error!(0, 'First error')
-      sync.mark_batch_error!(50, 'Second error')
-
-      errors = sync.reload.metadata['batch_errors']
-      expect(errors.keys).to contain_exactly('0', '50')
-    end
-  end
-
   describe 'AASM state transitions' do
     let(:sync_run) { create(:playlist_sync_run) }
 
@@ -102,6 +75,10 @@ RSpec.describe PlaylistSyncRun do
                status: :processing_batches,
                batches_total: 3,
                batches_completed: 3)
+      end
+
+      before do
+        allow(Playlists::ArchiveMissingJob).to receive(:perform_later)
       end
 
       it 'enqueues ArchiveMissingJob' do

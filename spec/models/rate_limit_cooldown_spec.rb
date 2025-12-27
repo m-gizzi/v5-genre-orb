@@ -99,48 +99,6 @@ RSpec.describe RateLimitCooldown do
     end
   end
 
-  describe '.cleanup_expired!' do
-    let!(:first_active_cooldown) { create(:rate_limit_cooldown, :in_progress) }
-    let!(:second_active_cooldown) { create(:rate_limit_cooldown, :in_progress, endpoint: 'spotify:tracks') }
-
-    before do
-      create(:rate_limit_cooldown, :expired, endpoint: 'spotify:artists')
-      create(:rate_limit_cooldown, :expired, endpoint: 'spotify:albums')
-    end
-
-    it 'deletes all expired cooldowns' do
-      expect { described_class.cleanup_expired! }
-        .to change { described_class.expired.count }.from(2).to(0)
-    end
-
-    it 'does not delete active cooldowns' do
-      described_class.cleanup_expired!
-
-      expect(described_class.in_progress).to contain_exactly(first_active_cooldown, second_active_cooldown)
-    end
-
-    it 'returns number of deleted records' do
-      expect(described_class.cleanup_expired!).to eq(2)
-    end
-  end
-
-  describe '#in_progress?' do
-    it 'returns true when expires_at is in the future' do
-      cooldown = build(:rate_limit_cooldown, expires_at: 5.minutes.from_now)
-      expect(cooldown).to be_in_progress
-    end
-
-    it 'returns false when expires_at is in the past' do
-      cooldown = build(:rate_limit_cooldown, expires_at: 5.minutes.ago)
-      expect(cooldown).not_to be_in_progress
-    end
-
-    it 'returns false when expires_at is now' do
-      cooldown = build(:rate_limit_cooldown, expires_at: Time.current)
-      expect(cooldown).not_to be_in_progress
-    end
-  end
-
   describe '#seconds_remaining' do
     it 'returns seconds until expiry' do
       freeze_time do

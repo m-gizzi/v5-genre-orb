@@ -8,7 +8,6 @@ FactoryBot.define do
     playlists_processed { 0 }
     batches_total { 0 }
     batches_completed { 0 }
-    metadata { {} }
 
     trait :fetching_metadata do
       status { :fetching_metadata }

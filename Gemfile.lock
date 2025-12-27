@@ -87,7 +87,7 @@ GEM
     bindex (0.8.1)
     bootsnap (1.19.0)
       msgpack (~> 1.2)
-    brakeman (7.1.1)
+    brakeman (7.1.2)
       racc
     builder (3.3.0)
     bullet (8.1.0)
@@ -116,9 +116,6 @@ GEM
       rexml
     crass (1.0.6)
     date (3.5.0)
-    debug (1.11.0)
-      irb (~> 1.10)
-      reline (>= 0.3.8)
     diff-lcs (1.6.2)
     docile (1.4.1)
     domain_name (0.6.20240107)
@@ -571,7 +568,6 @@ DEPENDENCIES
   bullet
   bundler-audit
   capybara
-  debug
   dotenv-rails (~> 3.1)
   factory_bot_rails
   faker
