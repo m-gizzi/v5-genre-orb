@@ -49,7 +49,7 @@ RSpec.describe Spotify::BaseClient do
     context 'when API returns 429 Too Many Requests' do
       let(:retry_after_seconds) { 60 }
       let(:rest_client_error) do
-        response = double('response', headers: { retry_after: retry_after_seconds })
+        response = instance_double(RestClient::Response, headers: { retry_after: retry_after_seconds })
         RestClient::TooManyRequests.new(response)
       end
 

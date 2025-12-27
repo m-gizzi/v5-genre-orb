@@ -13,7 +13,7 @@ RSpec.describe 'Playlist sync flow' do
   end
 
   describe 'full sync from start to finish' do
-    let(:playlists_batch1) do
+    let(:first_playlists_batch) do
       Array.new(50) do |i|
         {
           spotify_id: "playlist#{i}",
@@ -24,7 +24,7 @@ RSpec.describe 'Playlist sync flow' do
       end
     end
 
-    let(:playlists_batch2) do
+    let(:second_playlists_batch) do
       Array.new(25) do |i|
         {
           spotify_id: "playlist#{i + 50}",
@@ -37,15 +37,21 @@ RSpec.describe 'Playlist sync flow' do
 
     before do
       allow(spotify_client).to receive(:fetch_user_playlists)
-        .with(limit: 50, offset: 0).and_return({
-          playlists: playlists_batch1,
-          pagination: { total: 75, limit: 50, offset: 0, next: 'next_url', previous: nil }
-        })
+        .with(limit: 50, offset: 0)
+        .and_return(
+          {
+            playlists: first_playlists_batch,
+            pagination: { total: 75, limit: 50, offset: 0, next: 'next_url', previous: nil }
+          }
+        )
       allow(spotify_client).to receive(:fetch_user_playlists)
-        .with(limit: 50, offset: 50).and_return({
-          playlists: playlists_batch2,
-          pagination: { total: 75, limit: 50, offset: 50, next: nil, previous: 'prev_url' }
-        })
+        .with(limit: 50, offset: 50)
+        .and_return(
+          {
+            playlists: second_playlists_batch,
+            pagination: { total: 75, limit: 50, offset: 50, next: nil, previous: 'prev_url' }
+          }
+        )
     end
 
     it 'completes full sync from start to finish' do
@@ -166,10 +172,13 @@ RSpec.describe 'Playlist sync flow' do
 
       before do
         allow(spotify_client).to receive(:fetch_user_playlists)
-          .with(limit: 50, offset: 0).and_return({
-            playlists: small_batch,
-            pagination: { total: 10, limit: 50, offset: 0, next: nil, previous: nil }
-          })
+          .with(limit: 50, offset: 0)
+          .and_return(
+            {
+              playlists: small_batch,
+              pagination: { total: 10, limit: 50, offset: 0, next: nil, previous: nil }
+            }
+          )
       end
 
       it 'completes sync successfully' do
@@ -187,10 +196,13 @@ RSpec.describe 'Playlist sync flow' do
     context 'when user has no playlists' do
       before do
         allow(spotify_client).to receive(:fetch_user_playlists)
-          .with(limit: 50, offset: 0).and_return({
-            playlists: [],
-            pagination: { total: 0, limit: 50, offset: 0, next: nil, previous: nil }
-          })
+          .with(limit: 50, offset: 0)
+          .and_return(
+            {
+              playlists: [],
+              pagination: { total: 0, limit: 50, offset: 0, next: nil, previous: nil }
+            }
+          )
       end
 
       it 'completes sync successfully' do
@@ -215,10 +227,13 @@ RSpec.describe 'Playlist sync flow' do
 
     before do
       allow(spotify_client).to receive(:fetch_user_playlists)
-        .with(limit: 50, offset: 0).and_return({
-          playlists: playlists,
-          pagination: { total: 10, limit: 50, offset: 0, next: nil, previous: nil }
-        })
+        .with(limit: 50, offset: 0)
+        .and_return(
+          {
+            playlists: playlists,
+            pagination: { total: 10, limit: 50, offset: 0, next: nil, previous: nil }
+          }
+        )
     end
 
     it 'prevents duplicate syncs for same user' do

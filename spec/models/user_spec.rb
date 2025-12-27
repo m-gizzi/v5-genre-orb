@@ -9,14 +9,10 @@ RSpec.describe User do
     let(:user) { create(:user) }
     let(:new_token) { 'new_access_token_abc123' }
     let(:token_lifetime) { 3600 }
-    let(:expected_expiry) { Time.current + 3600.seconds }
+    let(:expected_expiry) { 3600.seconds.from_now }
 
     before do
       travel_to Time.zone.parse('2025-12-23 10:00:00')
-    end
-
-    after do
-      travel_back
     end
 
     it 'updates the access token' do

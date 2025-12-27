@@ -15,9 +15,9 @@ module Playlists
       synced_playlist_ids = sync_run.playlist_sync_items.pluck(:playlist_id)
 
       sync_run.user.playlists
-        .active
-        .where.not(id: synced_playlist_ids)
-        .update_all(archived_at: Time.current)
+              .active
+              .where.not(id: synced_playlist_ids)
+              .update_all(archived_at: Time.current)
     end
   end
 end

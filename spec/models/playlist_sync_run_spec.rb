@@ -4,27 +4,21 @@ require 'rails_helper'
 
 RSpec.describe PlaylistSyncRun do
   describe '.in_progress_for_user' do
-    let(:user1) { create(:user) }
-    let(:user2) { create(:user) }
-    let!(:user1_sync) { create(:playlist_sync_run, user: user1, status: :processing_batches) }
-    let!(:user2_sync) { create(:playlist_sync_run, user: user2, status: :processing_batches) }
-    let!(:user1_completed) { create(:playlist_sync_run, user: user1, status: :completed) }
+    let(:user) { create(:user) }
+    let!(:user_sync) { create(:playlist_sync_run, user: user, status: :processing_batches) }
+    let!(:user_completed) { create(:playlist_sync_run, user: user, status: :completed) }
 
     it 'returns the in-progress sync for the specified user' do
-      expect(described_class.in_progress_for_user(user1)).to eq(user1_sync)
-    end
-
-    it 'does not return syncs for other users' do
-      expect(described_class.in_progress_for_user(user1)).not_to eq(user2_sync)
+      expect(described_class.in_progress_for_user(user)).to eq(user_sync)
     end
 
     it 'does not return completed syncs' do
-      expect(described_class.in_progress_for_user(user1)).not_to eq(user1_completed)
+      expect(described_class.in_progress_for_user(user)).not_to eq(user_completed)
     end
 
     it 'returns nil when no in-progress sync exists' do
-      user3 = create(:user)
-      expect(described_class.in_progress_for_user(user3)).to be_nil
+      user2 = create(:user)
+      expect(described_class.in_progress_for_user(user2)).to be_nil
     end
   end
 

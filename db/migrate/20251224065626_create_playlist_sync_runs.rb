@@ -20,13 +20,13 @@ class CreatePlaylistSyncRuns < ActiveRecord::Migration[8.1]
 
       t.timestamps
 
-      t.index [:user_id, :status]
+      t.index %i[user_id status]
       t.index :status
       t.index :created_at
 
       t.index :user_id,
               unique: true,
-              where: "status IN (0, 1, 2, 3)",
+              where: 'status IN (0, 1, 2, 3)',
               name: 'index_sync_runs_on_user_active_unique'
     end
   end

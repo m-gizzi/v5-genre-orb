@@ -6,6 +6,7 @@ source 'https://rubygems.org'
 gem 'rails', '~> 8.1.1'
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
 gem 'propshaft'
+
 gem 'pg', '~> 1.1'
 # Use the Puma web server [https://github.com/puma/puma]
 gem 'puma', '>= 5.0'
@@ -17,18 +18,18 @@ gem 'stimulus-rails'
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
 gem 'jbuilder'
 
-gem 'tzinfo-data', platforms: %i[windows jruby]
+gem 'aasm', '~> 5.5'
+gem 'bootsnap', require: false
+gem 'image_processing', '~> 1.2'
+gem 'kamal', require: false
+gem 'lockbox'
+gem 'rspotify', '~> 2.12'
 gem 'solid_cable'
 gem 'solid_cache'
 gem 'solid_queue'
-gem 'bootsnap', require: false
-gem 'kamal', require: false
-gem 'thruster', require: false
-gem 'image_processing', '~> 1.2'
-gem 'lockbox'
-gem 'rspotify', '~> 2.12'
 gem 'strong_migrations'
-gem 'aasm', '~> 5.5'
+gem 'thruster', require: false
+gem 'tzinfo-data', platforms: %i[windows jruby]
 
 group :development, :test do
   gem 'brakeman', require: false

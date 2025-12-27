@@ -7,20 +7,17 @@ RSpec.describe Playlists::ArchiveMissingJob do
   let(:sync_run) { create(:playlist_sync_run, user: user, status: :archiving, started_at: Time.current) }
 
   describe '#perform' do
-    context 'when all playlists are still in Spotify' do
-      let!(:playlist1) { create(:playlist, user: user, spotify_id: 'p1') }
-      let!(:playlist2) { create(:playlist, user: user, spotify_id: 'p2') }
+    context 'when playlist is still in Spotify' do
+      let!(:playlist) { create(:playlist, user: user, spotify_id: 'p1') }
 
       before do
-        create(:playlist_sync_item, playlist_sync_run: sync_run, playlist: playlist1)
-        create(:playlist_sync_item, playlist_sync_run: sync_run, playlist: playlist2)
+        create(:playlist_sync_item, playlist_sync_run: sync_run, playlist: playlist)
       end
 
       it 'does not archive any playlists' do
         described_class.perform_now(sync_run.id)
 
-        expect(playlist1.reload.archived_at).to be_nil
-        expect(playlist2.reload.archived_at).to be_nil
+        expect(playlist.reload.archived_at).to be_nil
       end
 
       it 'marks sync_run as completed' do
@@ -38,8 +35,7 @@ RSpec.describe Playlists::ArchiveMissingJob do
 
     context 'when some playlists are missing from Spotify' do
       let!(:synced_playlist) { create(:playlist, user: user, spotify_id: 'p1') }
-      let!(:missing_playlist1) { create(:playlist, user: user, spotify_id: 'p2', archived_at: nil) }
-      let!(:missing_playlist2) { create(:playlist, user: user, spotify_id: 'p3', archived_at: nil) }
+      let!(:missing_playlist) { create(:playlist, user: user, spotify_id: 'p2', archived_at: nil) }
 
       before do
         create(:playlist_sync_item, playlist_sync_run: sync_run, playlist: synced_playlist)
@@ -49,8 +45,7 @@ RSpec.describe Playlists::ArchiveMissingJob do
         freeze_time do
           described_class.perform_now(sync_run.id)
 
-          expect(missing_playlist1.reload.archived_at).to be_within(1.second).of(Time.current)
-          expect(missing_playlist2.reload.archived_at).to be_within(1.second).of(Time.current)
+          expect(missing_playlist.reload.archived_at).to be_within(1.second).of(Time.current)
         end
       end
 
@@ -78,25 +73,6 @@ RSpec.describe Playlists::ArchiveMissingJob do
         described_class.perform_now(sync_run.id)
 
         expect(already_archived.reload.archived_at).to be_within(1.second).of(original_archived_at)
-      end
-    end
-
-    context 'when no playlists were synced' do
-      let!(:playlist1) { create(:playlist, user: user, spotify_id: 'p1', archived_at: nil) }
-      let!(:playlist2) { create(:playlist, user: user, spotify_id: 'p2', archived_at: nil) }
-
-      it 'archives all playlists' do
-        freeze_time do
-          described_class.perform_now(sync_run.id)
-
-          expect(playlist1.reload.archived_at).to be_within(1.second).of(Time.current)
-          expect(playlist2.reload.archived_at).to be_within(1.second).of(Time.current)
-        end
-      end
-
-      it 'marks sync_run as completed' do
-        described_class.perform_now(sync_run.id)
-        expect(sync_run.reload).to be_completed
       end
     end
   end

@@ -49,7 +49,9 @@ RSpec.describe Playlists::StartSyncService do
     end
 
     context 'when user has completed sync' do
-      let!(:completed_sync) { create(:playlist_sync_run, user: user, status: :completed) }
+      before do
+        create(:playlist_sync_run, user: user, status: :completed)
+      end
 
       it 'creates a new sync_run' do
         expect do
@@ -65,7 +67,9 @@ RSpec.describe Playlists::StartSyncService do
     end
 
     context 'when user has failed sync' do
-      let!(:failed_sync) { create(:playlist_sync_run, user: user, status: :failed) }
+      before do
+        create(:playlist_sync_run, user: user, status: :failed)
+      end
 
       it 'creates a new sync_run' do
         expect do

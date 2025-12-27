@@ -8,10 +8,6 @@ RSpec.describe Playlists::FetchPlaylistBatchService do
   let(:spotify_client) { instance_double(Spotify::PlaylistClient) }
   let(:service) { described_class.new(sync_run: sync_run, offset: 50, limit: 50) }
 
-  before do
-    allow(Spotify::PlaylistClient).to receive(:for_user).with(user).and_return(spotify_client)
-  end
-
   let(:playlists) do
     Array.new(50) do |i|
       {
@@ -37,6 +33,7 @@ RSpec.describe Playlists::FetchPlaylistBatchService do
   end
 
   before do
+    allow(Spotify::PlaylistClient).to receive(:for_user).with(user).and_return(spotify_client)
     allow(spotify_client).to receive(:fetch_user_playlists)
       .with(limit: 50, offset: 50).and_return(response)
   end

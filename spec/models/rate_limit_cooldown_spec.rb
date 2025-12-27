@@ -5,7 +5,10 @@ require 'rails_helper'
 RSpec.describe RateLimitCooldown do
   describe '.find_in_progress' do
     let!(:active_cooldown) { create(:rate_limit_cooldown, :in_progress, endpoint: 'spotify:playlists') }
-    let!(:expired_cooldown) { create(:rate_limit_cooldown, :expired, endpoint: 'spotify:tracks') }
+
+    before do
+      create(:rate_limit_cooldown, :expired, endpoint: 'spotify:tracks')
+    end
 
     it 'returns active cooldown for endpoint' do
       expect(described_class.find_in_progress('spotify:playlists')).to eq(active_cooldown)
@@ -26,9 +29,9 @@ RSpec.describe RateLimitCooldown do
 
     context 'when cooldown does not exist' do
       it 'creates new cooldown' do
-        expect {
+        expect do
           described_class.set_cooldown!(endpoint, retry_after)
-        }.to change(described_class, :count).by(1)
+        end.to change(described_class, :count).by(1)
       end
 
       it 'sets endpoint' do
@@ -56,9 +59,9 @@ RSpec.describe RateLimitCooldown do
       end
 
       it 'does not create duplicate cooldown' do
-        expect {
+        expect do
           described_class.set_cooldown!(endpoint, retry_after)
-        }.not_to change(described_class, :count)
+        end.not_to change(described_class, :count)
       end
 
       context 'when new expiry is later than existing' do
@@ -97,10 +100,13 @@ RSpec.describe RateLimitCooldown do
   end
 
   describe '.cleanup_expired!' do
-    let!(:active_cooldown1) { create(:rate_limit_cooldown, :in_progress) }
-    let!(:active_cooldown2) { create(:rate_limit_cooldown, :in_progress, endpoint: 'spotify:tracks') }
-    let!(:expired_cooldown1) { create(:rate_limit_cooldown, :expired, endpoint: 'spotify:artists') }
-    let!(:expired_cooldown2) { create(:rate_limit_cooldown, :expired, endpoint: 'spotify:albums') }
+    let!(:first_active_cooldown) { create(:rate_limit_cooldown, :in_progress) }
+    let!(:second_active_cooldown) { create(:rate_limit_cooldown, :in_progress, endpoint: 'spotify:tracks') }
+
+    before do
+      create(:rate_limit_cooldown, :expired, endpoint: 'spotify:artists')
+      create(:rate_limit_cooldown, :expired, endpoint: 'spotify:albums')
+    end
 
     it 'deletes all expired cooldowns' do
       expect { described_class.cleanup_expired! }
@@ -110,7 +116,7 @@ RSpec.describe RateLimitCooldown do
     it 'does not delete active cooldowns' do
       described_class.cleanup_expired!
 
-      expect(described_class.in_progress).to contain_exactly(active_cooldown1, active_cooldown2)
+      expect(described_class.in_progress).to contain_exactly(first_active_cooldown, second_active_cooldown)
     end
 
     it 'returns number of deleted records' do

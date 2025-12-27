@@ -8,10 +8,10 @@ module Playlists
       job.handle_authentication_failure(error)
     end
 
-    def perform(sync_run_id, *args)
+    def perform(sync_run_id, *)
       @sync_run = PlaylistSyncRun.find(sync_run_id)
 
-      call(*args)
+      call(*)
     end
 
     private
