@@ -6,4 +6,6 @@ class Playlist < ApplicationRecord
   validates :spotify_id, presence: true, uniqueness: true
   validates :name, presence: true
   validates :raw_data, presence: true
+
+  scope :active, -> { where(archived_at: nil) }
 end

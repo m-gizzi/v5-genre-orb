@@ -17,18 +17,36 @@ Layout/FirstArrayElementIndentation:
 Lint/MissingSuper:
   AllowedParentClasses: [ApplicationService]
 
+Metrics/AbcSize:
+  CountRepeatedAttributes: false
+  Exclude:
+    - 'db/**/*'
+
+Metrics/MethodLength:
+  CountAsOne: ['array', 'hash', 'heredoc', 'method_call']
+
 Rails/RakeEnvironment:
   Enabled: false
 
-RSpecRails/InferredSpecType:
+Rails/SkipsModelValidations:
   Enabled: false
 
-RSpec/MultipleExpectations:
-  Enabled: false
+RSpec/DescribeClass:
+  Exclude:
+    - 'spec/integration/**/*'
 
 RSpec/ExampleLength:
   Max: 10
   CountAsOne: ['array', 'hash', 'heredoc', 'method_call']
+
+RSpec/MultipleExpectations:
+  Enabled: false
+
+RSpec/NestedGroups:
+  Max: 4
+
+RSpecRails/InferredSpecType:
+  Enabled: false
 
 Style/Documentation:
   Enabled: false

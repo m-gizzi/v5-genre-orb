@@ -10,11 +10,41 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_24_035102) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_26_032323) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
+  create_table "playlist_sync_items", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "playlist_id", null: false
+    t.bigint "playlist_sync_run_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["playlist_id"], name: "index_playlist_sync_items_on_playlist_id"
+    t.index ["playlist_sync_run_id", "playlist_id"], name: "index_sync_items_on_sync_run_and_playlist_unique", unique: true
+    t.index ["playlist_sync_run_id"], name: "index_playlist_sync_items_on_playlist_sync_run_id"
+  end
+
+  create_table "playlist_sync_runs", force: :cascade do |t|
+    t.integer "batches_completed", default: 0
+    t.integer "batches_total", default: 0
+    t.datetime "completed_at"
+    t.datetime "created_at", null: false
+    t.text "error_message"
+    t.integer "playlists_processed", default: 0
+    t.datetime "started_at"
+    t.integer "status", null: false
+    t.integer "total_playlists_expected", default: 0
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["created_at"], name: "index_playlist_sync_runs_on_created_at"
+    t.index ["status"], name: "index_playlist_sync_runs_on_status"
+    t.index ["user_id", "status"], name: "index_playlist_sync_runs_on_user_id_and_status"
+    t.index ["user_id"], name: "index_playlist_sync_runs_on_user_id"
+    t.index ["user_id"], name: "index_sync_runs_on_user_active_unique", unique: true, where: "(status = ANY (ARRAY[0, 1, 2, 3]))"
+  end
+
   create_table "playlists", force: :cascade do |t|
+    t.datetime "archived_at"
     t.datetime "created_at", null: false
     t.text "description"
     t.string "name", null: false
@@ -24,6 +54,16 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_24_035102) do
     t.bigint "user_id", null: false
     t.index ["spotify_id"], name: "index_playlists_on_spotify_id", unique: true
     t.index ["user_id"], name: "index_playlists_on_user_id"
+  end
+
+  create_table "rate_limit_cooldowns", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "endpoint", null: false
+    t.datetime "expires_at", null: false
+    t.integer "retry_after_seconds", null: false
+    t.datetime "updated_at", null: false
+    t.index ["endpoint"], name: "index_cooldowns_on_endpoint_unique", unique: true
+    t.index ["expires_at"], name: "index_rate_limit_cooldowns_on_expires_at"
   end
 
   create_table "users", force: :cascade do |t|
@@ -38,5 +78,8 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_24_035102) do
     t.index ["spotify_id"], name: "index_users_on_spotify_id", unique: true
   end
 
+  add_foreign_key "playlist_sync_items", "playlist_sync_runs"
+  add_foreign_key "playlist_sync_items", "playlists"
+  add_foreign_key "playlist_sync_runs", "users"
   add_foreign_key "playlists", "users"
 end

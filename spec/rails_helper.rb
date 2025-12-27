@@ -62,6 +62,7 @@ rescue ActiveRecord::PendingMigrationError => e
 end
 RSpec.configure do |config|
   config.include FactoryBot::Syntax::Methods
+  config.include ActiveSupport::Testing::TimeHelpers
 
   config.define_derived_metadata do |meta|
     meta[:aggregate_failures] = true
