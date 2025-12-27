@@ -3,7 +3,6 @@
 module Playlists
   class FetchPlaylistBatchService < ApplicationService
     def initialize(sync_run:, offset:, limit:)
-      @sync_run = sync_run
       @offset = offset
       @limit = limit
       @spotify_client = Spotify::PlaylistClient.for_user(sync_run.user)
@@ -18,7 +17,7 @@ module Playlists
 
     private
 
-    attr_reader :sync_run, :offset, :limit, :spotify_client, :batch_processor
+    attr_reader :offset, :limit, :spotify_client, :batch_processor
 
     def fetch_playlists_from_spotify
       response = spotify_client.fetch_user_playlists(limit: limit, offset: offset)

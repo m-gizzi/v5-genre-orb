@@ -1,6 +1,23 @@
 detectors:
   IrresponsibleModule:
     enabled: false
+  UncommunicativeVariableName:
+    accept:
+      - e
+  MissingSafeMethod:
+    enabled: false
+  FeatureEnvy:
+    enabled: false
+  UtilityFunction:
+    enabled: false
+  BooleanParameter:
+    enabled: false
+  NilCheck:
+    enabled: false
+  ControlParameter:
+    enabled: false
+  TooManyStatements:
+    enabled: false
 
 directories:
   "db/migrate":

@@ -33,19 +33,21 @@ module Spotify
       private
 
       def owner_data
-        return nil unless data['owner']
+        owner = data['owner']
+        return nil unless owner
 
         {
-          id: data['owner']['id'],
-          display_name: data['owner']['display_name'],
-          uri: data['owner']['uri']
+          id: owner['id'],
+          display_name: owner['display_name'],
+          uri: owner['uri']
         }
       end
 
       def images_data
-        return [] unless data['images']
+        images = data['images']
+        return [] unless images
 
-        data['images'].map do |image|
+        images.map do |image|
           {
             url: image['url'],
             height: image['height'],

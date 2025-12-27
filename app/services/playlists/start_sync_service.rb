@@ -9,14 +9,24 @@ module Playlists
     end
 
     def call
-      existing = PlaylistSyncRun.in_progress_for_user(user)
+      existing = find_in_progress_sync
       return existing if existing
 
+      create_new_sync
+    rescue ActiveRecord::RecordNotUnique
+      find_in_progress_sync
+    end
+
+    private
+
+    def find_in_progress_sync
+      PlaylistSyncRun.in_progress_for_user(user)
+    end
+
+    def create_new_sync
       sync_run = PlaylistSyncRun.create!(user: user, status: :pending)
       Playlists::CoordinatorJob.perform_later(sync_run.id)
       sync_run
-    rescue ActiveRecord::RecordNotUnique
-      PlaylistSyncRun.in_progress_for_user(user)
     end
   end
 end

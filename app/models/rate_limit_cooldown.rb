@@ -20,9 +20,9 @@ class RateLimitCooldown < ApplicationRecord
       expires_at = Time.current + retry_after_seconds.seconds
 
       transaction do
-        cooldown = lock.find_or_create_by!(endpoint: endpoint) do |c|
-          c.expires_at = expires_at
-          c.retry_after_seconds = retry_after_seconds
+        cooldown = lock.find_or_create_by!(endpoint: endpoint) do |new_cooldown|
+          new_cooldown.expires_at = expires_at
+          new_cooldown.retry_after_seconds = retry_after_seconds
         end
 
         if expires_at > cooldown.expires_at
