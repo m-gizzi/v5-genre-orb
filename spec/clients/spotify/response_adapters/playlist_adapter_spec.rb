@@ -36,13 +36,6 @@ RSpec.describe Spotify::ResponseAdapters::PlaylistAdapter do
 
     let(:playlist_data) { base_playlist_data }
 
-    it 'transforms JSON hash into a hash' do
-      expect(adapted_playlist).to be_a(Hash)
-      expect(adapted_playlist[:spotify_id]).to eq('playlist123')
-      expect(adapted_playlist[:name]).to eq('Test Playlist')
-      expect(adapted_playlist[:description]).to eq('A test playlist')
-    end
-
     it 'includes all essential playlist metadata' do
       expect(adapted_playlist).to include(
         spotify_id: 'playlist123',

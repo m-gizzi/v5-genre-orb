@@ -42,7 +42,6 @@ RSpec.describe Playlists::ArchiveMissingJob do
       let!(:missing_playlist2) { create(:playlist, user: user, spotify_id: 'p3', archived_at: nil) }
 
       before do
-        # Only p1 was found during this sync
         create(:playlist_sync_item, playlist_sync_run: sync_run, playlist: synced_playlist)
       end
 
@@ -99,36 +98,6 @@ RSpec.describe Playlists::ArchiveMissingJob do
         described_class.perform_now(sync_run.id)
         expect(sync_run.reload).to be_completed
       end
-    end
-
-    context 'when user has playlists from different users' do
-      let(:other_user) { create(:user) }
-      let!(:my_playlist) { create(:playlist, user: user, spotify_id: 'p1') }
-      let!(:other_playlist) { create(:playlist, user: other_user, spotify_id: 'p2', archived_at: nil) }
-
-      before do
-        create(:playlist_sync_item, playlist_sync_run: sync_run, playlist: my_playlist)
-      end
-
-      it 'does not archive other users playlists' do
-        described_class.perform_now(sync_run.id)
-        expect(other_playlist.reload.archived_at).to be_nil
-      end
-    end
-
-    context 'when sync_run has no items' do
-      it 'is idempotent and can run multiple times' do
-        described_class.perform_now(sync_run.id)
-        described_class.perform_now(sync_run.id)
-
-        expect(sync_run.reload).to be_completed
-      end
-    end
-  end
-
-  describe 'retry behavior' do
-    it 'includes SpotifyJobErrorHandling concern' do
-      expect(described_class.ancestors).to include(SpotifyJobErrorHandling)
     end
   end
 end

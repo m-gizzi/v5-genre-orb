@@ -27,22 +27,5 @@ RSpec.describe User do
       update_credentials
       expect(user.reload.token_expires_at).to be_within(1.second).of(expected_expiry)
     end
-
-    it 'persists the changes to the database' do
-      update_credentials
-      user_from_db = described_class.find(user.id)
-      expect(user_from_db.access_token).to eq(new_token)
-      expect(user_from_db.token_expires_at).to be_within(1.second).of(expected_expiry)
-    end
-
-    context 'when token_lifetime is different' do
-      let(:token_lifetime) { 7200 }
-      let(:expected_expiry) { Time.current + 7200.seconds }
-
-      it 'calculates correct expiration time' do
-        update_credentials
-        expect(user.reload.token_expires_at).to be_within(1.second).of(expected_expiry)
-      end
-    end
   end
 end

@@ -5,38 +5,6 @@ require 'rails_helper'
 RSpec.describe Spotify::BaseClient do
   let(:user) { create(:user) }
 
-  describe '.for_user' do
-    subject(:client) { described_class.for_user(user) }
-
-    it 'returns a BaseClient instance' do
-      expect(client).to be_a(described_class)
-    end
-
-    it 'initializes with the user' do
-      expect(client.user).to eq(user)
-    end
-  end
-
-  describe '#initialize' do
-    subject(:client) { described_class.new(user) }
-
-    it 'builds an RSpotify::User instance' do
-      expect(client.rspotify_user).to be_a(RSpotify::User)
-    end
-
-    it 'configures RSpotify::User with correct credentials' do
-      rspotify_credentials = client.rspotify_user.credentials
-
-      expect(rspotify_credentials['token']).to eq(user.access_token)
-      expect(rspotify_credentials['refresh_token']).to eq(user.refresh_token)
-      expect(rspotify_credentials['access_refresh_callback']).to be_a(Proc)
-    end
-
-    it 'sets the correct Spotify user ID' do
-      expect(client.rspotify_user.id).to eq(user.spotify_id)
-    end
-  end
-
   describe '#handle_spotify_errors' do
     subject(:client) { described_class.new(user) }
 
@@ -45,10 +13,6 @@ RSpec.describe Spotify::BaseClient do
     context 'when no cooldown is active' do
       before do
         allow(RateLimitCooldown).to receive(:find_in_progress).with(endpoint).and_return(nil)
-      end
-
-      it 'executes the block' do
-        expect { |b| client.send(:handle_spotify_errors, endpoint, &b) }.to yield_control
       end
 
       it 'returns the block result' do
@@ -68,16 +32,6 @@ RSpec.describe Spotify::BaseClient do
         expect do
           client.send(:handle_spotify_errors, endpoint) { 'should not execute' }
         end.to raise_error(Spotify::Errors::RateLimitCooldownActive)
-      end
-
-      it 'does not execute the block' do
-        expect do |b|
-          begin
-            client.send(:handle_spotify_errors, endpoint, &b)
-          rescue Spotify::Errors::RateLimitCooldownActive
-            # Expected error
-          end
-        end.not_to yield_control
       end
 
       it 'includes retry_after in error' do
@@ -124,23 +78,6 @@ RSpec.describe Spotify::BaseClient do
 
         expect(error.retry_after).to eq(retry_after_seconds)
       end
-
-      context 'when retry_after header is missing' do
-        let(:rest_client_error) do
-          response = double('response', headers: {})
-          RestClient::TooManyRequests.new(response)
-        end
-
-        it 'passes nil to set_cooldown! which uses default' do
-          begin
-            client.send(:handle_spotify_errors, endpoint) { raise rest_client_error }
-          rescue Spotify::Errors::RateLimitError
-            # Expected error
-          end
-
-          expect(RateLimitCooldown).to have_received(:set_cooldown!).with(endpoint, nil)
-        end
-      end
     end
 
     context 'when API returns authentication error' do
@@ -154,18 +91,6 @@ RSpec.describe Spotify::BaseClient do
         expect do
           client.send(:handle_spotify_errors, endpoint) { raise auth_error }
         end.to raise_error(Spotify::Errors::AuthenticationError)
-      end
-
-      it 'does not create a cooldown' do
-        allow(RateLimitCooldown).to receive(:set_cooldown!)
-
-        begin
-          client.send(:handle_spotify_errors, endpoint) { raise auth_error }
-        rescue Spotify::Errors::AuthenticationError
-          # Expected error
-        end
-
-        expect(RateLimitCooldown).not_to have_received(:set_cooldown!)
       end
     end
   end

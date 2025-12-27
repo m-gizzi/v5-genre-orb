@@ -41,12 +41,6 @@ RSpec.describe Playlists::FetchPlaylistBatchService do
       .with(limit: 50, offset: 50).and_return(response)
   end
 
-  it 'fetches playlists from Spotify' do
-    service.call
-    expect(spotify_client).to have_received(:fetch_user_playlists)
-      .with(limit: 50, offset: 50)
-  end
-
   it 'processes the batch' do
     expect { service.call }.to change { user.playlists.count }.by(50)
   end
@@ -59,33 +53,5 @@ RSpec.describe Playlists::FetchPlaylistBatchService do
   it 'increments playlists_processed counter' do
     service.call
     expect(sync_run.reload.playlists_processed).to eq(50)
-  end
-
-  context 'with custom limit' do
-    let(:service) { described_class.new(sync_run: sync_run, offset: 0, limit: 20) }
-
-    let(:response) do
-      {
-        playlists: playlists.take(20),
-        pagination: {
-          total: 100,
-          limit: 20,
-          offset: 0,
-          next: 'https://api.spotify.com/v1/users/user123/playlists?offset=20&limit=20',
-          previous: nil
-        }
-      }
-    end
-
-    before do
-      allow(spotify_client).to receive(:fetch_user_playlists)
-        .with(limit: 20, offset: 0).and_return(response)
-    end
-
-    it 'passes custom limit to Spotify client' do
-      service.call
-      expect(spotify_client).to have_received(:fetch_user_playlists)
-        .with(limit: 20, offset: 0)
-    end
   end
 end

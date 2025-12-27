@@ -14,13 +14,5 @@ FactoryBot.define do
       expires_at { 5.minutes.from_now }
       retry_after_seconds { 300 }
     end
-
-    trait :for_tracks do
-      endpoint { 'spotify:tracks' }
-    end
-
-    trait :for_artists do
-      endpoint { 'spotify:artists' }
-    end
   end
 end

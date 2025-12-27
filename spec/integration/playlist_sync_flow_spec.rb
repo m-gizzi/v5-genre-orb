@@ -222,12 +222,9 @@ RSpec.describe 'Playlist sync flow' do
     end
 
     it 'prevents duplicate syncs for same user' do
-      # Don't use perform_enqueued_jobs - we want to test the duplicate prevention
-      # logic without completing the first sync
       sync_run1 = Playlists::StartSyncService.call(user)
       sync_run2 = Playlists::StartSyncService.call(user)
 
-      # Should return same sync_run
       expect(sync_run1.id).to eq(sync_run2.id)
       expect(PlaylistSyncRun.where(user: user).count).to eq(1)
     end

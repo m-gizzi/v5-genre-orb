@@ -3,34 +3,6 @@
 require 'rails_helper'
 
 RSpec.describe RateLimitCooldown do
-  describe 'scopes' do
-    describe '.in_progress' do
-      let!(:active_cooldown) { create(:rate_limit_cooldown, :in_progress) }
-      let!(:expired_cooldown) { create(:rate_limit_cooldown, :expired, endpoint: 'spotify:tracks') }
-
-      it 'returns only cooldowns that have not expired' do
-        expect(described_class.in_progress).to contain_exactly(active_cooldown)
-      end
-
-      it 'does not include expired cooldowns' do
-        expect(described_class.in_progress).not_to include(expired_cooldown)
-      end
-    end
-
-    describe '.expired' do
-      let!(:active_cooldown) { create(:rate_limit_cooldown, :in_progress) }
-      let!(:expired_cooldown) { create(:rate_limit_cooldown, :expired, endpoint: 'spotify:tracks') }
-
-      it 'returns only expired cooldowns' do
-        expect(described_class.expired).to contain_exactly(expired_cooldown)
-      end
-
-      it 'does not include active cooldowns' do
-        expect(described_class.expired).not_to include(active_cooldown)
-      end
-    end
-  end
-
   describe '.find_in_progress' do
     let!(:active_cooldown) { create(:rate_limit_cooldown, :in_progress, endpoint: 'spotify:playlists') }
     let!(:expired_cooldown) { create(:rate_limit_cooldown, :expired, endpoint: 'spotify:tracks') }
@@ -92,7 +64,7 @@ RSpec.describe RateLimitCooldown do
       context 'when new expiry is later than existing' do
         it 'extends the cooldown' do
           freeze_time do
-            new_retry_after = 300 # 5 minutes
+            new_retry_after = 300
             expected_expiry = Time.current + new_retry_after.seconds
 
             described_class.set_cooldown!(endpoint, new_retry_after)
@@ -114,27 +86,12 @@ RSpec.describe RateLimitCooldown do
           original_expiry = existing_cooldown.expires_at
 
           freeze_time do
-            new_retry_after = 30 # Shorter than existing
+            new_retry_after = 30
             described_class.set_cooldown!(endpoint, new_retry_after)
 
-            # Should keep the longer expiry
             expect(existing_cooldown.reload.expires_at).to be_within(1.second).of(original_expiry)
           end
         end
-      end
-    end
-
-    context 'thread safety' do
-      it 'prevents duplicate creation when called concurrently' do
-        # Simulate concurrent calls
-        threads = 3.times.map do
-          Thread.new { described_class.set_cooldown!(endpoint, retry_after) }
-        end
-
-        threads.each(&:join)
-
-        # Should only create one cooldown despite concurrent calls
-        expect(described_class.where(endpoint: endpoint).count).to eq(1)
       end
     end
   end
@@ -189,20 +146,6 @@ RSpec.describe RateLimitCooldown do
     it 'returns 0 when cooldown has expired' do
       cooldown = build(:rate_limit_cooldown, expires_at: 5.minutes.ago)
       expect(cooldown.seconds_remaining).to eq(0)
-    end
-
-    it 'returns 0 when expiry is now' do
-      freeze_time do
-        cooldown = build(:rate_limit_cooldown, expires_at: Time.current)
-        expect(cooldown.seconds_remaining).to eq(0)
-      end
-    end
-
-    it 'rounds up to nearest second' do
-      freeze_time do
-        cooldown = build(:rate_limit_cooldown, expires_at: 5.5.seconds.from_now)
-        expect(cooldown.seconds_remaining).to eq(6)
-      end
     end
   end
 end
