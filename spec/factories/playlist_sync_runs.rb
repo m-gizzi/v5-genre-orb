@@ -4,7 +4,6 @@ FactoryBot.define do
   factory :playlist_sync_run do
     user
     total_playlists_expected { 0 }
-    playlists_fetched { 0 }
     playlists_processed { 0 }
     batches_total { 0 }
     batches_completed { 0 }
@@ -25,7 +24,6 @@ FactoryBot.define do
       status { :archiving }
       started_at { Time.current }
       total_playlists_expected { 150 }
-      playlists_fetched { 150 }
       playlists_processed { 150 }
       batches_total { 3 }
       batches_completed { 3 }
@@ -36,7 +34,6 @@ FactoryBot.define do
       started_at { 1.hour.ago }
       completed_at { Time.current }
       total_playlists_expected { 150 }
-      playlists_fetched { 150 }
       playlists_processed { 150 }
       batches_total { 3 }
       batches_completed { 3 }
