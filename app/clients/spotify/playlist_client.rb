@@ -8,7 +8,7 @@ module Spotify
         parsed_response = parse_json_response(raw_response)
 
         {
-          playlists: adapt_playlists(parsed_response['items']),
+          items: parsed_response['items'] || [],
           pagination: extract_pagination_metadata(parsed_response)
         }
       end
@@ -17,18 +17,8 @@ module Spotify
     def create_playlist(name:, description: nil, public: true)
       handle_spotify_errors('spotify:users:create_playlist') do
         raw_response = rspotify_user.create_playlist!(name, public: public, description: description)
-        parsed_response = parse_json_response(raw_response)
-
-        ResponseAdapters::PlaylistAdapter.adapt(parsed_response)
+        parse_json_response(raw_response)
       end
-    end
-
-    private
-
-    def adapt_playlists(items)
-      return [] if items.nil?
-
-      items.map { |item| ResponseAdapters::PlaylistAdapter.adapt(item) }
     end
   end
 end
