@@ -6,7 +6,7 @@ module Tracks
       client = Spotify::TrackClient.for_user(user)
       repository = Spotify::TrackRepository.new(playlist: playlist)
 
-      response = client.fetch_playlist_with_tracks(playlist, limit: limit, offset: offset)
+      response = client.fetch_playlist_tracks(playlist, limit: limit, offset: offset)
       result = repository.process_batch(response[:items])
 
       {

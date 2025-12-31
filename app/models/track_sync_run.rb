@@ -12,6 +12,15 @@ class TrackSyncRun < ApplicationRecord
   scope :in_progress, -> { where(status: IN_PROGRESS_STATUSES) }
   scope :in_progress_for_playlist, ->(playlist) { in_progress.where(playlist: playlist).order(created_at: :desc).first }
 
+  enum :status, {
+    pending: 0,
+    fetching_metadata: 1,
+    processing_batches: 2,
+    archiving: 3,
+    completed: 4,
+    failed: 5
+  }, validate: true
+
   aasm column: :status, enum: true do
     state :pending, initial: true
     state :fetching_metadata
@@ -40,7 +49,7 @@ class TrackSyncRun < ApplicationRecord
     end
   end
 
-  def self.in_progress_for_playlist
+  def self.in_progress_for_playlist(playlist)
     in_progress.find_by(playlist: playlist)
   end
 
