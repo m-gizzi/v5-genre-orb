@@ -10,7 +10,7 @@ module Spotify
 
     def initialize(user)
       @user = user
-      @rspotify_user = RSpotifyBuilder.build_user(user)
+      @rspotify_user = RspotifyBuilder.build_user(user)
     end
 
     private

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Spotify
-  class RSpotifyBuilder
+  class RspotifyBuilder
     class << self
       def build_user(user)
         RSpotify::User.new(
