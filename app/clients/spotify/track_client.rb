@@ -9,7 +9,6 @@ module Spotify
         parsed_response = parse_json_response(raw_response)
 
         {
-          snapshot_id: rspotify_playlist.snapshot_id,
           items: parsed_response['items'] || [],
           pagination: extract_pagination_metadata(parsed_response)
         }

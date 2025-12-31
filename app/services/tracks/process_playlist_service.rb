@@ -14,14 +14,6 @@ module Tracks
       sync_run.start_fetching_metadata!
 
       first_batch_result = fetch_and_persist_first_batch
-      current_snapshot_id = first_batch_result[:snapshot_id]
-      playlist.update_snapshot_if_changed!(current_snapshot_id)
-
-      unless force || playlist.snapshot_changed_since_last_track_sync?(current_snapshot_id)
-        sync_run.update!(batches_total: 0)
-        sync_run.complete!
-        return
-      end
 
       playlist.playlist_tracks.destroy_all
       calculate_and_set_totals(first_batch_result)
@@ -30,7 +22,7 @@ module Tracks
       update_sync_run_stats(first_batch_result[:counts])
       sync_run.increment_batch_completion!
 
-      enqueue_remaining_batches(current_snapshot_id)
+      enqueue_remaining_batches
     end
 
     private
@@ -61,10 +53,10 @@ module Tracks
       end
     end
 
-    def enqueue_remaining_batches(current_snapshot_id)
+    def enqueue_remaining_batches
       (1...sync_run.batches_total).each do |batch_index|
         offset = batch_index * BATCH_SIZE
-        Tracks::FetchTrackBatchJob.perform_later(sync_run.id, offset, BATCH_SIZE, current_snapshot_id)
+        Tracks::FetchTrackBatchJob.perform_later(sync_run.id, offset, BATCH_SIZE)
       end
     end
   end

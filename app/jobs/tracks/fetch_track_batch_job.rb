@@ -6,8 +6,7 @@ module Tracks
       FetchTrackBatchService.call(
         sync_run: sync_run,
         offset: offset,
-        limit: limit,
-        snapshot_id: snapshot_id
+        limit: limit
       )
     end
   end
