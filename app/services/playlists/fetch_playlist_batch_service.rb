@@ -25,8 +25,8 @@ module Playlists
     attr_reader :sync_run, :offset, :limit
 
     def update_sync_run_stats(stats)
-      stats.with_lock do
-        stats_to_update.each do |stat_name, count|
+      sync_run.with_lock do
+        stats.each do |stat_name, count|
           sync_run.increment!(stat_name, count)
         end
       end
