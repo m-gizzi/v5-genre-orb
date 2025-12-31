@@ -8,15 +8,13 @@ module Tracks
       @sync_run = sync_run
       @playlist = sync_run.playlist
       @force = force
-      @spotify_client = Spotify::TrackClient.for_user(playlist.user)
-      @batch_processor = SpotifyBatchProcessor.new(sync_run: sync_run)
     end
 
     def call
       sync_run.start_fetching_metadata!
 
-      first_batch_response = fetch_first_batch
-      current_snapshot_id = first_batch_response[:snapshot_id]
+      first_batch_result = fetch_and_persist_first_batch
+      current_snapshot_id = first_batch_result[:snapshot_id]
       playlist.update_snapshot_if_changed!(current_snapshot_id)
 
       unless force || playlist.snapshot_changed_since_last_track_sync?(current_snapshot_id)
@@ -26,10 +24,10 @@ module Tracks
       end
 
       playlist.playlist_tracks.destroy_all
-      calculate_and_set_totals(first_batch_response)
+      calculate_and_set_totals(first_batch_result)
       sync_run.start_processing_batches!
 
-      batch_processor.process_track_batch(first_batch_response[:tracks])
+      update_sync_run_stats(first_batch_result[:counts])
       sync_run.increment_batch_completion!
 
       enqueue_remaining_batches(current_snapshot_id)
@@ -37,21 +35,30 @@ module Tracks
 
     private
 
-    attr_reader :sync_run, :playlist, :force, :spotify_client, :batch_processor
+    attr_reader :sync_run, :playlist, :force
 
-    def fetch_first_batch
-      spotify_client.fetch_playlist_with_tracks(
-        playlist.spotify_id,
+    def fetch_and_persist_first_batch
+      FetchAndPersistService.new.fetch_and_persist_batch(
+        user: playlist.user,
+        playlist: playlist,
         limit: BATCH_SIZE,
         offset: 0
       )
     end
 
-    def calculate_and_set_totals(response)
-      total_tracks = response[:pagination][:total]
+    def calculate_and_set_totals(result)
+      total_tracks = result[:pagination][:total]
       batches_total = (total_tracks.to_f / BATCH_SIZE).ceil
 
       sync_run.update!(batches_total: batches_total)
+    end
+
+    def update_sync_run_stats(stats)
+      sync_run.with_lock do
+        stats.each do |stat_name, count|
+          sync_run.increment!(stat_name, count)
+        end
+      end
     end
 
     def enqueue_remaining_batches(current_snapshot_id)

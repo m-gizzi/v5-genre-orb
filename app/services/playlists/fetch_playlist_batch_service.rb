@@ -3,25 +3,42 @@
 module Playlists
   class FetchPlaylistBatchService < ApplicationService
     def initialize(sync_run:, offset:, limit:)
+      @sync_run = sync_run
       @offset = offset
       @limit = limit
-      @spotify_client = Spotify::PlaylistClient.for_user(sync_run.user)
-      @batch_processor = SpotifyBatchProcessor.new(sync_run: sync_run)
     end
 
     def call
-      playlists = fetch_playlists_from_spotify
-      batch_processor.process_batch(playlists)
-      batch_processor.mark_batch_complete!
+      result = FetchAndPersistService.new.fetch_and_persist_batch(
+        user: sync_run.user,
+        limit: limit,
+        offset: offset
+      )
+
+      update_sync_run_stats(result[:counts])
+      create_playlist_sync_items(result[:playlist_ids])
+      sync_run.increment_batch_completion!
     end
 
     private
 
-    attr_reader :offset, :limit, :spotify_client, :batch_processor
+    attr_reader :sync_run, :offset, :limit
 
-    def fetch_playlists_from_spotify
-      response = spotify_client.fetch_user_playlists(limit: limit, offset: offset)
-      response[:playlists]
+    def update_sync_run_stats(stats)
+      stats.with_lock do
+        stats_to_update.each do |stat_name, count|
+          sync_run.increment!(stat_name, count)
+        end
+      end
+    end
+
+    def create_playlist_sync_items(playlist_ids)
+      playlist_ids.each do |playlist_id|
+        PlaylistSyncItem.find_or_create_by!(
+          playlist_sync_run_id: sync_run.id,
+          playlist_id: playlist_id
+        )
+      end
     end
   end
 end

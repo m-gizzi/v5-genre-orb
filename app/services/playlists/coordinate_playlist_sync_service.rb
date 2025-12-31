@@ -6,31 +6,36 @@ module Playlists
 
     def initialize(sync_run:)
       @sync_run = sync_run
-      @spotify_client = Spotify::PlaylistClient.for_user(sync_run.user)
-      @batch_processor = SpotifyBatchProcessor.new(sync_run: sync_run)
     end
 
     def call
       sync_run.start_fetching_metadata!
 
-      first_batch_response = fetch_first_batch
-      calculate_and_set_totals(first_batch_response)
+      first_batch_result = fetch_and_persist_first_batch
+      calculate_and_set_totals(first_batch_result)
 
       sync_run.start_processing_batches!
-      process_first_batch(first_batch_response[:playlists])
+      update_sync_run_stats(first_batch_result[:counts])
+      create_playlist_sync_items(first_batch_result[:playlist_ids])
+      sync_run.increment_batch_completion!
+
       enqueue_remaining_batch_jobs
     end
 
     private
 
-    attr_reader :sync_run, :spotify_client, :batch_processor
+    attr_reader :sync_run
 
-    def fetch_first_batch
-      spotify_client.fetch_user_playlists(limit: BATCH_SIZE, offset: 0)
+    def fetch_and_persist_first_batch
+      FetchAndPersistService.new.fetch_and_persist_batch(
+        user: sync_run.user,
+        limit: BATCH_SIZE,
+        offset: 0
+      )
     end
 
-    def calculate_and_set_totals(first_batch_response)
-      total_count = first_batch_response[:pagination][:total]
+    def calculate_and_set_totals(result)
+      total_count = result[:pagination][:total]
       batches_needed = calculate_batches_needed(total_count)
 
       sync_run.update!(
@@ -45,9 +50,21 @@ module Playlists
       (total_count.to_f / BATCH_SIZE).ceil
     end
 
-    def process_first_batch(playlists)
-      batch_processor.process_batch(playlists)
-      batch_processor.mark_batch_complete!
+    def update_sync_run_stats(stats)
+      sync_run.with_lock do
+        stats.each do |stat_name, count|
+          sync_run.increment!(stat_name, count)
+        end
+      end
+    end
+
+    def create_playlist_sync_items(playlist_ids)
+      playlist_ids.each do |playlist_id|
+        PlaylistSyncItem.find_or_create_by!(
+          playlist_sync_run_id: sync_run.id,
+          playlist_id: playlist_id
+        )
+      end
     end
 
     def enqueue_remaining_batch_jobs

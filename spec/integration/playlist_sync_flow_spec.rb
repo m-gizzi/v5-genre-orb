@@ -16,10 +16,9 @@ RSpec.describe 'Playlist sync flow' do
     let(:first_playlists_batch) do
       Array.new(50) do |i|
         {
-          spotify_id: "playlist#{i}",
-          name: "Playlist #{i}",
-          description: "Description #{i}",
-          raw_data: { 'id' => "playlist#{i}" }
+          'id' => "playlist#{i}",
+          'name' => "Playlist #{i}",
+          'description' => "Description #{i}"
         }
       end
     end
@@ -27,10 +26,9 @@ RSpec.describe 'Playlist sync flow' do
     let(:second_playlists_batch) do
       Array.new(25) do |i|
         {
-          spotify_id: "playlist#{i + 50}",
-          name: "Playlist #{i + 50}",
-          description: "Description #{i + 50}",
-          raw_data: { 'id' => "playlist#{i + 50}" }
+          'id' => "playlist#{i + 50}",
+          'name' => "Playlist #{i + 50}",
+          'description' => "Description #{i + 50}"
         }
       end
     end
@@ -40,7 +38,7 @@ RSpec.describe 'Playlist sync flow' do
         .with(limit: 50, offset: 0)
         .and_return(
           {
-            playlists: first_playlists_batch,
+            items: first_playlists_batch,
             pagination: { total: 75, limit: 50, offset: 0, next: 'next_url', previous: nil }
           }
         )
@@ -48,7 +46,7 @@ RSpec.describe 'Playlist sync flow' do
         .with(limit: 50, offset: 50)
         .and_return(
           {
-            playlists: second_playlists_batch,
+            items: second_playlists_batch,
             pagination: { total: 75, limit: 50, offset: 50, next: nil, previous: 'prev_url' }
           }
         )
@@ -82,7 +80,7 @@ RSpec.describe 'Playlist sync flow' do
       playlist = user.playlists.find_by(spotify_id: 'playlist0')
       expect(playlist.name).to eq('Playlist 0')
       expect(playlist.description).to eq('Description 0')
-      expect(playlist.raw_data['spotify_id']).to eq('playlist0')
+      expect(playlist.raw_data['id']).to eq('playlist0')
     end
 
     it 'updates progress counters correctly' do
@@ -162,10 +160,9 @@ RSpec.describe 'Playlist sync flow' do
       let(:small_batch) do
         Array.new(10) do |i|
           {
-            spotify_id: "playlist#{i}",
-            name: "Playlist #{i}",
-            description: nil,
-            raw_data: {}
+            'id' => "playlist#{i}",
+            'name' => "Playlist #{i}",
+            'description' => nil
           }
         end
       end
@@ -175,7 +172,7 @@ RSpec.describe 'Playlist sync flow' do
           .with(limit: 50, offset: 0)
           .and_return(
             {
-              playlists: small_batch,
+              items: small_batch,
               pagination: { total: 10, limit: 50, offset: 0, next: nil, previous: nil }
             }
           )
@@ -199,7 +196,7 @@ RSpec.describe 'Playlist sync flow' do
           .with(limit: 50, offset: 0)
           .and_return(
             {
-              playlists: [],
+              items: [],
               pagination: { total: 0, limit: 50, offset: 0, next: nil, previous: nil }
             }
           )
@@ -221,7 +218,7 @@ RSpec.describe 'Playlist sync flow' do
   describe 'concurrent sync requests' do
     let(:playlists) do
       Array.new(10) do |i|
-        { spotify_id: "playlist#{i}", name: "Playlist #{i}", description: nil, raw_data: {} }
+        { 'id' => "playlist#{i}", 'name' => "Playlist #{i}", 'description' => nil }
       end
     end
 
@@ -230,7 +227,7 @@ RSpec.describe 'Playlist sync flow' do
         .with(limit: 50, offset: 0)
         .and_return(
           {
-            playlists: playlists,
+            items: playlists,
             pagination: { total: 10, limit: 50, offset: 0, next: nil, previous: nil }
           }
         )

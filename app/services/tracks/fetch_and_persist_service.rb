@@ -1,0 +1,19 @@
+# frozen_string_literal: true
+
+module Tracks
+  class FetchAndPersistService < ApplicationService
+    def fetch_and_persist_batch(user:, playlist:, limit:, offset:)
+      client = Spotify::TrackClient.for_user(user)
+      repository = Spotify::TrackRepository.new(playlist: playlist)
+
+      response = client.fetch_playlist_with_tracks(playlist, limit: limit, offset: offset)
+      result = repository.process_batch(response[:items])
+
+      {
+        counts: result[:counts],
+        snapshot_id: response[:snapshot_id],
+        pagination: response[:pagination]
+      }
+    end
+  end
+end

@@ -46,16 +46,16 @@ RSpec.describe Spotify::PlaylistClient do
         .and_return(raw_json_response)
     end
 
-    it 'returns a hash with playlists and pagination' do
-      expect(response).to have_key(:playlists)
+    it 'returns a hash with items and pagination' do
+      expect(response).to have_key(:items)
       expect(response).to have_key(:pagination)
     end
 
-    it 'includes playlist hashes in the playlists array' do
-      expect(response[:playlists].first).to include(
-        spotify_id: 'playlist123',
-        name: 'Test Playlist',
-        description: 'Test Description'
+    it 'includes playlist hashes in the items array' do
+      expect(response[:items].first).to include(
+        'id' => 'playlist123',
+        'name' => 'Test Playlist',
+        'description' => 'Test Description'
       )
     end
 
@@ -83,7 +83,7 @@ RSpec.describe Spotify::PlaylistClient do
       end
 
       it 'returns empty playlists array' do
-        expect(response[:playlists]).to eq([])
+        expect(response[:items]).to eq([])
         expect(response[:pagination][:total]).to eq(0)
       end
     end
@@ -121,8 +121,8 @@ RSpec.describe Spotify::PlaylistClient do
     end
 
     it 'returns a playlist hash' do
-      expect(created_playlist[:spotify_id]).to eq('new_playlist_id')
-      expect(created_playlist[:name]).to eq(name)
+      expect(created_playlist['id']).to eq('new_playlist_id')
+      expect(created_playlist['name']).to eq(name)
     end
   end
 end

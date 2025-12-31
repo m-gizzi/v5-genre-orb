@@ -15,13 +15,13 @@ RSpec.describe Playlists::CoordinatePlaylistSyncService do
   context 'when user has fewer than 50 playlists' do
     let(:playlists) do
       Array.new(25) do |i|
-        { spotify_id: "playlist#{i}", name: "Playlist #{i}", description: nil, raw_data: {} }
+        { 'id' => "playlist#{i}", 'name' => "Playlist #{i}", 'description' => nil }
       end
     end
 
     let(:response) do
       {
-        playlists: playlists,
+        items: playlists,
         pagination: {
           total: 25,
           limit: 50,
@@ -71,13 +71,13 @@ RSpec.describe Playlists::CoordinatePlaylistSyncService do
   context 'when user has 150 playlists (3 batches)' do
     let(:playlists) do
       Array.new(50) do |i|
-        { spotify_id: "playlist#{i}", name: "Playlist #{i}", description: nil, raw_data: {} }
+        { 'id' => "playlist#{i}", 'name' => "Playlist #{i}", 'description' => nil }
       end
     end
 
     let(:response) do
       {
-        playlists: playlists,
+        items: playlists,
         pagination: {
           total: 150,
           limit: 50,
@@ -113,7 +113,7 @@ RSpec.describe Playlists::CoordinatePlaylistSyncService do
   context 'when user has 0 playlists' do
     let(:response) do
       {
-        playlists: [],
+        items: [],
         pagination: {
           total: 0,
           limit: 50,

@@ -11,17 +11,16 @@ RSpec.describe Playlists::FetchPlaylistBatchService do
   let(:playlists) do
     Array.new(50) do |i|
       {
-        spotify_id: "playlist#{i + 50}",
-        name: "Playlist #{i + 50}",
-        description: "Description #{i + 50}",
-        raw_data: { 'id' => "playlist#{i + 50}" }
+        'id' => "playlist#{i + 50}",
+        'name' => "Playlist #{i + 50}",
+        'description' => "Description #{i + 50}"
       }
     end
   end
 
   let(:response) do
     {
-      playlists: playlists,
+      items: playlists,
       pagination: {
         total: 150,
         limit: 50,

@@ -8,26 +8,33 @@ module Tracks
       @offset = offset
       @limit = limit
       @snapshot_id = snapshot_id
-      @spotify_client = Spotify::TrackClient.for_user(playlist.user)
-      @batch_processor = SpotifyBatchProcessor.new(sync_run: sync_run)
     end
 
     def call
-      response = spotify_client.fetch_playlist_with_tracks(
-        playlist.spotify_id,
+      result = FetchAndPersistService.new.fetch_and_persist_batch(
+        user: playlist.user,
+        playlist: playlist,
         limit: limit,
         offset: offset
       )
 
-      batch_processor.process_track_batch(response[:tracks])
+      update_sync_run_stats(result[:counts])
       sync_run.increment_batch_completion!
       return unless sync_run.completed?
 
-      playlist.mark_tracks_synced!(snapshot_id)
+      playlist.mark_tracks_synced!(result[:snapshot_id])
     end
 
     private
 
-    attr_reader :sync_run, :playlist, :offset, :limit, :snapshot_id, :spotify_client, :batch_processor
+    attr_reader :sync_run, :playlist, :offset, :limit, :snapshot_id
+
+    def update_sync_run_stats(stats)
+      sync_run.with_lock do
+        stats.each do |stat_name, count|
+          sync_run.increment!(stat_name, count)
+        end
+      end
+    end
   end
 end
