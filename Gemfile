@@ -35,7 +35,7 @@ group :development, :test do
   gem 'brakeman', require: false
   gem 'bullet'
   gem 'bundler-audit', require: false
-  gem 'dotenv-rails', '~> 3.1'
+  gem 'dotenv-rails', '~> 3.2'
   gem 'factory_bot_rails'
   gem 'faker'
   gem 'pry-byebug'
