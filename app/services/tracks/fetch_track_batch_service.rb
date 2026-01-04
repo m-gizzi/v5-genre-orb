@@ -18,6 +18,7 @@ module Tracks
       )
 
       update_sync_run_stats(result[:counts])
+      create_track_sync_items(result[:track_ids])
       sync_run.increment_batch_completion!
     end
 
@@ -30,6 +31,15 @@ module Tracks
         stats.each do |stat_name, count|
           sync_run.increment!(stat_name, count)
         end
+      end
+    end
+
+    def create_track_sync_items(track_ids)
+      track_ids.each do |track_id|
+        TrackSyncItem.find_or_create_by!(
+          track_sync_run_id: sync_run.id,
+          track_id: track_id
+        )
       end
     end
   end

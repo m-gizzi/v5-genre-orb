@@ -11,7 +11,8 @@ module Tracks
 
       {
         counts: result[:counts],
-        pagination: response[:pagination]
+        pagination: response[:pagination],
+        track_ids: result[:track_ids]
       }
     end
   end

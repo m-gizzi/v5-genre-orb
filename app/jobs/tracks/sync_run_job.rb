@@ -19,7 +19,7 @@ module Tracks
     end
 
     def call
-      raise NotImplementedError, "Subclasses must implement #call"
+      raise NotImplementedError, 'Subclasses must implement #call'
     end
 
     private

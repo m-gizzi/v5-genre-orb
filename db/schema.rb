@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_31_043759) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_04_051552) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -103,6 +103,16 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_31_043759) do
     t.index ["track_id"], name: "index_track_artists_on_track_id"
   end
 
+  create_table "track_sync_items", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "track_id", null: false
+    t.bigint "track_sync_run_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["track_id"], name: "index_track_sync_items_on_track_id"
+    t.index ["track_sync_run_id", "track_id"], name: "index_track_sync_items_on_sync_run_and_track_unique", unique: true
+    t.index ["track_sync_run_id"], name: "index_track_sync_items_on_track_sync_run_id"
+  end
+
   create_table "track_sync_runs", force: :cascade do |t|
     t.integer "artists_processed", default: 0
     t.integer "batches_completed", default: 0
@@ -117,7 +127,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_31_043759) do
     t.datetime "updated_at", null: false
     t.index ["created_at"], name: "index_track_sync_runs_on_created_at"
     t.index ["playlist_id", "status"], name: "index_track_sync_runs_on_playlist_id_and_status"
-    t.index ["playlist_id"], name: "index_track_sync_runs_on_playlist_active_uniqu", unique: true, where: "(status = ANY (ARRAY[0, 1, 2]))"
+    t.index ["playlist_id"], name: "index_track_sync_runs_on_playlist_active_uniqu", unique: true, where: "(status = ANY (ARRAY[0, 1, 2, 3]))"
     t.index ["playlist_id"], name: "index_track_sync_runs_on_playlist_id"
     t.index ["status"], name: "index_track_sync_runs_on_status"
   end
@@ -159,5 +169,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_31_043759) do
   add_foreign_key "playlists", "users"
   add_foreign_key "track_artists", "artists"
   add_foreign_key "track_artists", "tracks"
+  add_foreign_key "track_sync_items", "track_sync_runs"
+  add_foreign_key "track_sync_items", "tracks"
   add_foreign_key "track_sync_runs", "playlists"
 end

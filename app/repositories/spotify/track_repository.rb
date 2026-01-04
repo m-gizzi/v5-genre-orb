@@ -10,24 +10,31 @@ module Spotify
     end
 
     def process_batch(raw_items)
+      track_ids = []
+
       raw_items.each do |raw_item|
-        process_track_item(raw_item)
+        track = process_track_item(raw_item)
+        track_ids << track.id if track
       end
 
-      { counts: counts_hash }
+      {
+        counts: counts_hash,
+        track_ids: track_ids
+      }
     end
 
     private
 
     def process_track_item(raw_item)
       track_data = raw_item['track']
-      return if track_data.nil?
+      return nil if track_data.nil?
 
       track = upsert_track(track_data)
       process_track_artists(track, track_data['artists'] || [])
-      create_playlist_track(track, raw_item)
+      create_or_update_playlist_track(track, raw_item)
 
       increment_count(:tracks_processed)
+      track
     end
 
     def upsert_track(track_data)
@@ -49,8 +56,6 @@ module Spotify
     end
 
     def process_track_artists(track, artists_data)
-      # NOTE: This destroys all existing track_artists for every track sync
-      # Could be optimized in the future
       track.track_artists.destroy_all
 
       artists_data.each do |artist_data|
@@ -72,13 +77,18 @@ module Spotify
       end
     end
 
-    def create_playlist_track(track, raw_item)
-      PlaylistTrack.create!(
+    def upsert_playlist_track(track, raw_item)
+      playlist_track = PlaylistTrack.find_or_initialize_by(
         playlist: playlist,
-        track: track,
+        track: track
+      )
+
+      playlist_track.assign_attributes(
         added_at: raw_item['added_at'],
         added_by_spotify_id: raw_item.dig('added_by', 'id')
       )
+
+      playlist_track.save!
     end
   end
 end

@@ -4,8 +4,10 @@ class TrackSyncRun < ApplicationRecord
   include AASM
 
   belongs_to :playlist
+  has_many :track_sync_items, dependent: :destroy
+  has_many :tracks, through: :track_sync_items
 
-  IN_PROGRESS_STATUSES = %i[pending fetching_metadata processing_batches].freeze
+  IN_PROGRESS_STATUSES = %i[pending fetching_metadata processing_batches archiving].freeze
 
   validates :status, presence: true
 
@@ -24,6 +26,7 @@ class TrackSyncRun < ApplicationRecord
     state :pending, initial: true
     state :fetching_metadata
     state :processing_batches
+    state :archiving
     state :completed
     state :failed
 
@@ -36,12 +39,19 @@ class TrackSyncRun < ApplicationRecord
       transitions from: :fetching_metadata, to: :processing_batches
     end
 
+    event :start_archiving do
+      after do
+        Tracks::CleanupRemovedJob.perform_later(id)
+      end
+
+      transitions from: :processing_batches, to: :archiving, guard: :all_batches_completed?
+    end
+
     event :complete do
       before { self.completed_at = Time.current }
       after { playlist.mark_tracks_synced!(playlist.snapshot_id) }
-      transitions from: :processing_batches,
-                  to: :completed,
-                  guard: :all_batches_completed?
+      transitions from: :archiving,
+                  to: :completed
     end
 
     event :fail do
@@ -57,7 +67,7 @@ class TrackSyncRun < ApplicationRecord
   def increment_batch_completion!
     with_lock do
       increment!(:batches_completed)
-      complete! if may_complete?
+      start_archiving! if may_start_archiving?
     end
   end
 

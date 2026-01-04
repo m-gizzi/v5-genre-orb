@@ -48,7 +48,7 @@ module Tracks
 
     def create_new_sync
       sync_run = TrackSyncRun.create!(playlist: playlist, status: :pending)
-      Tracks::ProcessPlaylistJob.perform_later(sync_run.id)
+      Tracks::CoordinatorJob.perform_later(sync_run.id)
       sync_run
     end
   end

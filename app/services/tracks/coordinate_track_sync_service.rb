@@ -14,11 +14,11 @@ module Tracks
 
       first_batch_result = fetch_and_persist_first_batch
 
-      playlist.playlist_tracks.destroy_all
       calculate_and_set_totals(first_batch_result)
       sync_run.start_processing_batches!
 
       update_sync_run_stats(first_batch_result[:counts])
+      create_track_sync_items(first_batch_result[:track_ids])
       sync_run.increment_batch_completion!
 
       enqueue_remaining_batches
@@ -49,6 +49,15 @@ module Tracks
         stats.each do |stat_name, count|
           sync_run.increment!(stat_name, count)
         end
+      end
+    end
+
+    def create_track_sync_items(track_ids)
+      track_ids.each do |track_id|
+        TrackSyncItem.find_or_create_by!(
+          track_sync_run_id: sync_run.id,
+          track_id: track_id
+        )
       end
     end
 
