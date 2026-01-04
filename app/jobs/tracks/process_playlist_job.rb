@@ -3,7 +3,7 @@
 module Tracks
   class ProcessPlaylistJob < SyncRunJob
     def call
-      ProcessPlaylistService.call(sync_run: sync_run, force: force)
+      CoordinateTrackSyncService.call(sync_run: sync_run)
     end
   end
 end

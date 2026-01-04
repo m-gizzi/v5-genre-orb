@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_28_233645) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_31_043759) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -69,12 +69,15 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_28_233645) do
     t.datetime "archived_at"
     t.datetime "created_at", null: false
     t.text "description"
+    t.string "last_track_sync_snapshot_id"
+    t.datetime "last_track_synced_at"
     t.string "name", null: false
     t.jsonb "raw_data", default: {}, null: false
     t.string "snapshot_id"
     t.string "spotify_id", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.index ["last_track_sync_snapshot_id"], name: "index_playlists_on_last_track_sync_snapshot_id"
     t.index ["snapshot_id"], name: "index_playlists_on_snapshot_id"
     t.index ["spotify_id"], name: "index_playlists_on_spotify_id", unique: true
     t.index ["user_id"], name: "index_playlists_on_user_id"

@@ -24,6 +24,13 @@ module Spotify
       }
     end
 
+    def process_single(raw_data)
+      upsert_playlist(raw_data)
+      increment_count(:playlists_processed)
+
+      { counts: counts_hash }
+    end
+
     private
 
     def upsert_playlist(raw_data)
@@ -31,6 +38,7 @@ module Spotify
       playlist.assign_attributes(
         name: raw_data['name'],
         description: raw_data['description'],
+        snapshot_id: raw_data['snapshot_id'],
         raw_data: raw_data
       )
 

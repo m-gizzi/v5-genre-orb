@@ -20,5 +20,12 @@ module Spotify
         parse_json_response(raw_response)
       end
     end
+
+    def fetch_playlist(spotify_id)
+      handle_spotify_errors('spotify:playlist') do
+        raw_response = RSpotify::Playlist.find_by_id(spotify_id)
+        parse_json_response(raw_response)
+      end
+    end
   end
 end

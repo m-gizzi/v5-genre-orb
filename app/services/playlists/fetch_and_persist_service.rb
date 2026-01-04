@@ -15,5 +15,17 @@ module Playlists
         pagination: response[:pagination]
       }
     end
+
+    def fetch_and_update_single(user:, spotify_id:)
+      client = Spotify::PlaylistClient.for_user(user)
+      repository = Spotify::PlaylistRepository.new(user: user)
+
+      raw_data = client.fetch_playlist(spotify_id)
+      result = repository.process_single(raw_data)
+
+      {
+        counts: result[:counts]
+      }
+    end
   end
 end

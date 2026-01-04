@@ -1,13 +1,12 @@
 # frozen_string_literal: true
 
 module Tracks
-  class ProcessPlaylistService < ApplicationService
+  class CoordinateTrackSyncService < ApplicationService
     BATCH_SIZE = 100
 
-    def initialize(sync_run:, force: false)
+    def initialize(sync_run:)
       @sync_run = sync_run
       @playlist = sync_run.playlist
-      @force = force
     end
 
     def call
@@ -27,7 +26,7 @@ module Tracks
 
     private
 
-    attr_reader :sync_run, :playlist, :force
+    attr_reader :sync_run, :playlist
 
     def fetch_and_persist_first_batch
       FetchAndPersistService.new.fetch_and_persist_batch(

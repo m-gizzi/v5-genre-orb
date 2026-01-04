@@ -11,4 +11,11 @@ class Playlist < ApplicationRecord
   validates :raw_data, presence: true
 
   scope :active, -> { where(archived_at: nil) }
+
+  def mark_tracks_synced!(synced_snapshot_id)
+    update!(
+      last_track_sync_snapshot_id: synced_snapshot_id,
+      last_track_synced_at: Time.current
+    )
+  end
 end

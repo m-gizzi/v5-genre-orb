@@ -10,7 +10,6 @@ class TrackSyncRun < ApplicationRecord
   validates :status, presence: true
 
   scope :in_progress, -> { where(status: IN_PROGRESS_STATUSES) }
-  scope :in_progress_for_playlist, ->(playlist) { in_progress.where(playlist: playlist).order(created_at: :desc).first }
 
   enum :status, {
     pending: 0,
@@ -39,8 +38,10 @@ class TrackSyncRun < ApplicationRecord
 
     event :complete do
       before { self.completed_at = Time.current }
-      transitions from: :processing_batches, to: :completed,
-        guard: :all_batches_completed?
+      after { playlist.mark_tracks_synced!(playlist.snapshot_id) }
+      transitions from: :processing_batches,
+                  to: :completed,
+                  guard: :all_batches_completed?
     end
 
     event :fail do
