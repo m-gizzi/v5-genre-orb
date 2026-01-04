@@ -4,8 +4,8 @@ module Playlists
   class SyncRunJob < ApplicationJob
     include SpotifyJobErrorHandling
 
-    discard_on Spotify::Errors::AuthenticationError do |job, error|
-      job.handle_authentication_failure(error)
+    discard_on StandardError do |job, error|
+      job.handle_job_failure(error)
     end
 
     def perform(sync_run_id, *)
@@ -18,7 +18,7 @@ module Playlists
 
     attr_reader :sync_run
 
-    def handle_authentication_failure(error)
+    def handle_job_failure(error)
       sync_run&.fail!(error.message)
     end
   end
