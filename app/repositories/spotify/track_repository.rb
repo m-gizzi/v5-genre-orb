@@ -10,16 +10,16 @@ module Spotify
     end
 
     def process_batch(raw_items)
-      track_ids = []
+      item_ids = []
 
       raw_items.each do |raw_item|
         track = process_track_item(raw_item)
-        track_ids << track.id if track
+        item_ids << track.id if track
       end
 
       {
         counts: counts_hash,
-        track_ids: track_ids
+        item_ids: item_ids
       }
     end
 

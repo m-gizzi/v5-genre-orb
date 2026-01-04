@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe Playlists::StartSyncService do
+RSpec.describe UserPlaylistSync::StartSyncService do
   let(:user) { create(:user) }
 
   describe '#call' do

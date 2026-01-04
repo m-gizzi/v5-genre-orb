@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Tracks
+module PlaylistTrackSync
   class StartSyncService < ApplicationService
     def initialize(playlist, force: false)
       @playlist = playlist

@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe Playlists::CoordinatePlaylistSyncService do
+RSpec.describe UserPlaylistSync::CoordinatePlaylistSyncService do
   let(:user) { create(:user) }
   let(:sync_run) { create(:playlist_sync_run, user: user, status: :pending) }
   let(:spotify_client) { instance_double(Spotify::PlaylistClient) }

@@ -7,7 +7,6 @@ class PlaylistSyncRun < ApplicationRecord
   has_many :playlist_sync_items, dependent: :destroy
   has_many :playlists, through: :playlist_sync_items
 
-  validates :total_playlists_expected, numericality: { greater_than_or_equal_to: 0 }
   validates :playlists_processed, numericality: { greater_than_or_equal_to: 0 }
   validates :batches_total, numericality: { greater_than_or_equal_to: 0 }
   validates :batches_completed, numericality: { greater_than_or_equal_to: 0 }

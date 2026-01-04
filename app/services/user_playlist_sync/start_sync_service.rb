@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Playlists
+module UserPlaylistSync
   class StartSyncService < ApplicationService
     attr_reader :user
 

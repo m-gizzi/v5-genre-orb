@@ -10,17 +10,17 @@ module Spotify
     end
 
     def process_batch(raw_items)
-      playlist_ids = []
+      item_ids = []
 
       raw_items.each do |raw_item|
         playlist = upsert_playlist(raw_item)
-        playlist_ids << playlist.id
+        item_ids << playlist.id
         increment_count(:playlists_processed)
       end
 
       {
         counts: counts_hash,
-        playlist_ids: playlist_ids
+        item_ids: item_ids
       }
     end
 
