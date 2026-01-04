@@ -19,6 +19,6 @@ class PlaylistSyncRun < ApplicationRecord
   private
 
   def enqueue_cleanup_job
-    Playlists::ArchiveMissingJob.perform_later(id)
+    UserPlaylistSync::ArchiveMissingJob.perform_later(id)
   end
 end

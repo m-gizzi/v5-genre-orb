@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-module Tracks
-  class FetchTrackBatchJob < SyncRunJob
-    def call
+module PlaylistTrackSync
+  class FetchTrackBatchJob < Base
+    def call(offset, limit)
       FetchTrackBatchService.call(
         sync_run: sync_run,
         offset: offset,

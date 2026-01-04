@@ -24,7 +24,7 @@ RSpec.describe Playlists::StartSyncService do
 
     it 'enqueues CoordinatorJob with sync_run id' do
       sync_run = described_class.call(user)
-      expect(Playlists::CoordinatorJob).to have_been_enqueued.with(sync_run.id)
+      expect(UserPlaylistSync::CoordinatorJob).to have_been_enqueued.with(sync_run.id)
     end
 
     context 'when user already has in-progress sync' do
@@ -44,7 +44,7 @@ RSpec.describe Playlists::StartSyncService do
       it 'does not enqueue CoordinatorJob' do
         expect do
           described_class.call(user)
-        end.not_to have_enqueued_job(Playlists::CoordinatorJob)
+        end.not_to have_enqueued_job(UserPlaylistSync::CoordinatorJob)
       end
     end
 
@@ -62,7 +62,7 @@ RSpec.describe Playlists::StartSyncService do
       it 'enqueues CoordinatorJob for new sync' do
         expect do
           described_class.call(user)
-        end.to have_enqueued_job(Playlists::CoordinatorJob)
+        end.to have_enqueued_job(UserPlaylistSync::CoordinatorJob)
       end
     end
 
@@ -80,7 +80,7 @@ RSpec.describe Playlists::StartSyncService do
       it 'enqueues CoordinatorJob for new sync' do
         expect do
           described_class.call(user)
-        end.to have_enqueued_job(Playlists::CoordinatorJob)
+        end.to have_enqueued_job(UserPlaylistSync::CoordinatorJob)
       end
     end
   end

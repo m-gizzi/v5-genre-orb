@@ -26,7 +26,7 @@ RSpec.describe PlaylistSyncRun do
     let(:sync) { create(:playlist_sync_run, :processing_batches, batches_total: 3, batches_completed: 1) }
 
     before do
-      allow(Playlists::ArchiveMissingJob).to receive(:perform_later)
+      allow(UserPlaylistSync::ArchiveMissingJob).to receive(:perform_later)
     end
 
     it 'increments batches_completed counter' do
@@ -52,7 +52,7 @@ RSpec.describe PlaylistSyncRun do
 
       it 'enqueues archival job with sync_run id' do
         sync.increment_batch_completion!
-        expect(Playlists::ArchiveMissingJob).to have_received(:perform_later).with(sync.id)
+        expect(UserPlaylistSync::ArchiveMissingJob).to have_received(:perform_later).with(sync.id)
       end
     end
   end
@@ -78,12 +78,12 @@ RSpec.describe PlaylistSyncRun do
       end
 
       before do
-        allow(Playlists::ArchiveMissingJob).to receive(:perform_later)
+        allow(UserPlaylistSync::ArchiveMissingJob).to receive(:perform_later)
       end
 
       it 'enqueues ArchiveMissingJob' do
         sync_run.start_archiving!
-        expect(Playlists::ArchiveMissingJob).to have_received(:perform_later).with(sync_run.id)
+        expect(UserPlaylistSync::ArchiveMissingJob).to have_received(:perform_later).with(sync_run.id)
       end
     end
 

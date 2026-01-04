@@ -52,7 +52,7 @@ RSpec.describe Playlists::CoordinatePlaylistSyncService do
     end
 
     it 'does not enqueue additional jobs' do
-      expect { service.call }.not_to have_enqueued_job(Playlists::FetchBatchJob)
+      expect { service.call }.not_to have_enqueued_job(UserPlaylistSync::FetchPlaylistBatchJob)
     end
 
     it 'transitions to archiving status after processing single batch' do
@@ -104,9 +104,9 @@ RSpec.describe Playlists::CoordinatePlaylistSyncService do
 
     it 'enqueues jobs only for batches 1 and 2' do
       expect { service.call }
-        .to have_enqueued_job(Playlists::FetchBatchJob).with(sync_run.id, 50, 50)
-        .and have_enqueued_job(Playlists::FetchBatchJob).with(sync_run.id, 100, 50)
-        .and have_enqueued_job(Playlists::FetchBatchJob).exactly(2).times
+        .to have_enqueued_job(UserPlaylistSync::FetchPlaylistBatchJob).with(sync_run.id, 50, 50)
+        .and have_enqueued_job(UserPlaylistSync::FetchPlaylistBatchJob).with(sync_run.id, 100, 50)
+        .and have_enqueued_job(UserPlaylistSync::FetchPlaylistBatchJob).exactly(2).times
     end
   end
 
@@ -135,7 +135,7 @@ RSpec.describe Playlists::CoordinatePlaylistSyncService do
     end
 
     it 'does not enqueue any batch jobs' do
-      expect { service.call }.not_to have_enqueued_job(Playlists::FetchBatchJob)
+      expect { service.call }.not_to have_enqueued_job(UserPlaylistSync::FetchPlaylistBatchJob)
     end
 
     it 'marks first (empty) batch as complete' do

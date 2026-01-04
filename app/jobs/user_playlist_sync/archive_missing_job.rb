@@ -1,9 +1,7 @@
 # frozen_string_literal: true
 
-module Playlists
-  class ArchiveMissingJob < SyncRunJob
-    queue_as :default
-
+module UserPlaylistSync
+  class ArchiveMissingJob < Base
     def call
       archive_missing_playlists
       sync_run.complete! if sync_run.may_complete?

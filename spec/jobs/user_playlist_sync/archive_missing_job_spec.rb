@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe Playlists::ArchiveMissingJob do
+RSpec.describe UserPlaylistSync::ArchiveMissingJob do
   let(:user) { create(:user) }
   let(:sync_run) { create(:playlist_sync_run, user: user, status: :archiving, started_at: Time.current) }
 

@@ -25,7 +25,7 @@ module Playlists
 
     def create_new_sync
       sync_run = PlaylistSyncRun.create!(user: user, status: :pending)
-      Playlists::CoordinatorJob.perform_later(sync_run.id)
+      UserPlaylistSync::CoordinatorJob.perform_later(sync_run.id)
       sync_run
     end
   end

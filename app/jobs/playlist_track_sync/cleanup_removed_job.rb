@@ -1,9 +1,7 @@
 # frozen_string_literal: true
 
-module Tracks
-  class CleanupRemovedJob < SyncRunJob
-    queue_as :default
-
+module PlaylistTrackSync
+  class CleanupRemovedJob < Base
     def call
       cleanup_removed_playlist_tracks
       sync_run.complete! if sync_run.may_complete?

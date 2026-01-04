@@ -14,7 +14,7 @@ class TrackSyncRun < ApplicationRecord
   private
 
   def enqueue_cleanup_job
-    Tracks::CleanupRemovedJob.perform_later(id)
+    PlaylistTrackSync::CleanupRemovedJob.perform_later(id)
   end
 
   def on_completion
