@@ -9,7 +9,7 @@ module Playlists
     end
 
     def call
-      result = FetchAndPersistService.new.fetch_and_persist_batch(
+      result = FetchAndPersistFacade.user_playlist_batch(
         user: sync_run.user,
         limit: limit,
         offset: offset

@@ -10,7 +10,7 @@ module Tracks
     end
 
     def call
-      result = FetchAndPersistService.new.fetch_and_persist_batch(
+      result = FetchAndPersistFacade.playlist_track_batch(
         user: playlist.user,
         playlist: playlist,
         limit: limit,

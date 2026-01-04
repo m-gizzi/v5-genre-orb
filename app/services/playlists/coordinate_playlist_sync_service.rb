@@ -15,10 +15,10 @@ module Playlists
       calculate_and_set_totals(first_batch_result)
 
       sync_run.start_processing_batches!
+
       update_sync_run_stats(first_batch_result[:counts])
       create_playlist_sync_items(first_batch_result[:playlist_ids])
       sync_run.increment_batch_completion!
-
       enqueue_remaining_batch_jobs
     end
 
@@ -27,7 +27,7 @@ module Playlists
     attr_reader :sync_run
 
     def fetch_and_persist_first_batch
-      FetchAndPersistService.new.fetch_and_persist_batch(
+      FetchAndPersistFacade.user_playlist_batch(
         user: sync_run.user,
         limit: BATCH_SIZE,
         offset: 0

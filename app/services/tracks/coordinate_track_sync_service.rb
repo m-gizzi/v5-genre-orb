@@ -29,7 +29,7 @@ module Tracks
     attr_reader :sync_run, :playlist
 
     def fetch_and_persist_first_batch
-      FetchAndPersistService.new.fetch_and_persist_batch(
+      FetchAndPersistFacade.playlist_track_batch(
         user: playlist.user,
         playlist: playlist,
         limit: BATCH_SIZE,

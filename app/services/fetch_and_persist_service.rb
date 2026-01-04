@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-module Playlists
-  class FetchAndPersistService < ApplicationService
-    def fetch_and_persist_batch(user:, limit:, offset:)
+class FetchAndPersistFacade < ApplicationService
+  class << self
+    def user_playlist_batch(user:, limit:, offset:)
       client = Spotify::PlaylistClient.for_user(user)
       repository = Spotify::PlaylistRepository.new(user: user)
 
@@ -16,7 +16,7 @@ module Playlists
       }
     end
 
-    def fetch_and_update_single(user:, spotify_id:)
+    def single_playlist(user:, spotify_id:)
       client = Spotify::PlaylistClient.for_user(user)
       repository = Spotify::PlaylistRepository.new(user: user)
 
@@ -25,6 +25,20 @@ module Playlists
 
       {
         counts: result[:counts]
+      }
+    end
+
+    def playlist_track_batch(user:, playlist:, limit:, offset:)
+      client = Spotify::TrackClient.for_user(user)
+      repository = Spotify::TrackRepository.new(playlist: playlist)
+
+      response = client.fetch_playlist_tracks(playlist, limit: limit, offset: offset)
+      result = repository.process_batch(response[:items])
+
+      {
+        counts: result[:counts],
+        pagination: response[:pagination],
+        track_ids: result[:track_ids]
       }
     end
   end

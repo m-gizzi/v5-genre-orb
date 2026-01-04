@@ -29,7 +29,7 @@ module Tracks
     end
 
     def fetch_and_check_snapshot
-      Playlists::FetchAndPersistService.call(
+      FetchAndPersistFacade.single_playlist(
         user: playlist.user,
         spotify_id: playlist.spotify_id
       )
