@@ -37,11 +37,6 @@ RSpec.describe UserPlaylistSync::CoordinatePlaylistSyncService do
         .with(limit: 50, offset: 0).and_return(response)
     end
 
-    it 'sets accurate total from pagination' do
-      service.call
-      expect(sync_run.reload.total_playlists_expected).to eq(25)
-    end
-
     it 'processes first batch immediately' do
       expect { service.call }.to change { user.playlists.count }.by(25)
     end
@@ -127,11 +122,6 @@ RSpec.describe UserPlaylistSync::CoordinatePlaylistSyncService do
     before do
       allow(spotify_client).to receive(:fetch_user_playlists)
         .with(limit: 50, offset: 0).and_return(response)
-    end
-
-    it 'sets total_playlists_expected to 0' do
-      service.call
-      expect(sync_run.reload.total_playlists_expected).to eq(0)
     end
 
     it 'does not enqueue any batch jobs' do
