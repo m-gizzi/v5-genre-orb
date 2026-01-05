@@ -11,7 +11,7 @@ class FetchAndPersistFacade < ApplicationService
 
       {
         counts: result[:counts],
-        playlist_ids: result[:playlist_ids],
+        item_ids: result[:item_ids],
         pagination: response[:pagination]
       }
     end
@@ -38,7 +38,7 @@ class FetchAndPersistFacade < ApplicationService
       {
         counts: result[:counts],
         pagination: response[:pagination],
-        track_ids: result[:track_ids]
+        item_ids: result[:item_ids]
       }
     end
   end

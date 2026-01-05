@@ -31,7 +31,7 @@ module Spotify
 
       track = upsert_track(track_data)
       process_track_artists(track, track_data['artists'] || [])
-      create_or_update_playlist_track(track, raw_item)
+      upsert_playlist_track(track, raw_item)
 
       increment_count(:tracks_processed)
       track

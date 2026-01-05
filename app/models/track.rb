@@ -9,12 +9,4 @@ class Track < ApplicationRecord
   validates :spotify_id, presence: true, uniqueness: true
   validates :name, presence: true
   validates :raw_data, presence: true
-
-  def album_name
-    raw_data.dig('album', 'name')
-  end
-
-  def album_image_url
-    raw_data.dig('album', 'images')&.first&.dig('url')
-  end
 end
