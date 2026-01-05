@@ -16,10 +16,9 @@ RSpec.describe 'Playlist sync flow' do
     let(:first_playlists_batch) do
       Array.new(50) do |i|
         {
-          spotify_id: "playlist#{i}",
-          name: "Playlist #{i}",
-          description: "Description #{i}",
-          raw_data: { 'id' => "playlist#{i}" }
+          'id' => "playlist#{i}",
+          'name' => "Playlist #{i}",
+          'description' => "Description #{i}"
         }
       end
     end
@@ -27,10 +26,9 @@ RSpec.describe 'Playlist sync flow' do
     let(:second_playlists_batch) do
       Array.new(25) do |i|
         {
-          spotify_id: "playlist#{i + 50}",
-          name: "Playlist #{i + 50}",
-          description: "Description #{i + 50}",
-          raw_data: { 'id' => "playlist#{i + 50}" }
+          'id' => "playlist#{i + 50}",
+          'name' => "Playlist #{i + 50}",
+          'description' => "Description #{i + 50}"
         }
       end
     end
@@ -40,7 +38,7 @@ RSpec.describe 'Playlist sync flow' do
         .with(limit: 50, offset: 0)
         .and_return(
           {
-            playlists: first_playlists_batch,
+            items: first_playlists_batch,
             pagination: { total: 75, limit: 50, offset: 0, next: 'next_url', previous: nil }
           }
         )
@@ -48,7 +46,7 @@ RSpec.describe 'Playlist sync flow' do
         .with(limit: 50, offset: 50)
         .and_return(
           {
-            playlists: second_playlists_batch,
+            items: second_playlists_batch,
             pagination: { total: 75, limit: 50, offset: 50, next: nil, previous: 'prev_url' }
           }
         )
@@ -58,7 +56,7 @@ RSpec.describe 'Playlist sync flow' do
       sync_run = nil
 
       perform_enqueued_jobs do
-        sync_run = Playlists::StartSyncService.call(user)
+        sync_run = UserPlaylistSync::StartSyncService.call(user)
       end
 
       expect(sync_run.reload).to be_completed
@@ -67,7 +65,7 @@ RSpec.describe 'Playlist sync flow' do
 
     it 'creates all playlists from Spotify' do
       perform_enqueued_jobs do
-        Playlists::StartSyncService.call(user)
+        UserPlaylistSync::StartSyncService.call(user)
       end
 
       expect(user.playlists.count).to eq(75)
@@ -76,20 +74,20 @@ RSpec.describe 'Playlist sync flow' do
 
     it 'sets correct playlist attributes' do
       perform_enqueued_jobs do
-        Playlists::StartSyncService.call(user)
+        UserPlaylistSync::StartSyncService.call(user)
       end
 
       playlist = user.playlists.find_by(spotify_id: 'playlist0')
       expect(playlist.name).to eq('Playlist 0')
       expect(playlist.description).to eq('Description 0')
-      expect(playlist.raw_data['spotify_id']).to eq('playlist0')
+      expect(playlist.raw_data['id']).to eq('playlist0')
     end
 
     it 'updates progress counters correctly' do
       sync_run = nil
 
       perform_enqueued_jobs do
-        sync_run = Playlists::StartSyncService.call(user)
+        sync_run = UserPlaylistSync::StartSyncService.call(user)
       end
 
       sync_run.reload
@@ -102,7 +100,7 @@ RSpec.describe 'Playlist sync flow' do
       sync_run = nil
 
       perform_enqueued_jobs do
-        sync_run = Playlists::StartSyncService.call(user)
+        sync_run = UserPlaylistSync::StartSyncService.call(user)
       end
 
       expect(sync_run.playlist_sync_items.count).to eq(75)
@@ -116,7 +114,7 @@ RSpec.describe 'Playlist sync flow' do
 
       it 'updates existing playlists' do
         perform_enqueued_jobs do
-          Playlists::StartSyncService.call(user)
+          UserPlaylistSync::StartSyncService.call(user)
         end
 
         existing_playlist.reload
@@ -126,7 +124,7 @@ RSpec.describe 'Playlist sync flow' do
 
       it 'does not create duplicate playlists' do
         perform_enqueued_jobs do
-          Playlists::StartSyncService.call(user)
+          UserPlaylistSync::StartSyncService.call(user)
         end
 
         expect(user.playlists.where(spotify_id: 'playlist0').count).to eq(1)
@@ -143,7 +141,7 @@ RSpec.describe 'Playlist sync flow' do
 
       it 'archives playlists not found in Spotify' do
         perform_enqueued_jobs do
-          Playlists::StartSyncService.call(user)
+          UserPlaylistSync::StartSyncService.call(user)
         end
 
         expect(playlist_deleted_from_spotify.reload.archived_at).not_to be_nil
@@ -151,7 +149,7 @@ RSpec.describe 'Playlist sync flow' do
 
       it 'does not archive playlists that still exist in Spotify' do
         perform_enqueued_jobs do
-          Playlists::StartSyncService.call(user)
+          UserPlaylistSync::StartSyncService.call(user)
         end
 
         expect(playlist_still_exists.reload.archived_at).to be_nil
@@ -162,10 +160,9 @@ RSpec.describe 'Playlist sync flow' do
       let(:small_batch) do
         Array.new(10) do |i|
           {
-            spotify_id: "playlist#{i}",
-            name: "Playlist #{i}",
-            description: nil,
-            raw_data: {}
+            'id' => "playlist#{i}",
+            'name' => "Playlist #{i}",
+            'description' => nil
           }
         end
       end
@@ -175,7 +172,7 @@ RSpec.describe 'Playlist sync flow' do
           .with(limit: 50, offset: 0)
           .and_return(
             {
-              playlists: small_batch,
+              items: small_batch,
               pagination: { total: 10, limit: 50, offset: 0, next: nil, previous: nil }
             }
           )
@@ -185,7 +182,7 @@ RSpec.describe 'Playlist sync flow' do
         sync_run = nil
 
         perform_enqueued_jobs do
-          sync_run = Playlists::StartSyncService.call(user)
+          sync_run = UserPlaylistSync::StartSyncService.call(user)
         end
 
         expect(sync_run.reload).to be_completed
@@ -199,7 +196,7 @@ RSpec.describe 'Playlist sync flow' do
           .with(limit: 50, offset: 0)
           .and_return(
             {
-              playlists: [],
+              items: [],
               pagination: { total: 0, limit: 50, offset: 0, next: nil, previous: nil }
             }
           )
@@ -209,7 +206,7 @@ RSpec.describe 'Playlist sync flow' do
         sync_run = nil
 
         perform_enqueued_jobs do
-          sync_run = Playlists::StartSyncService.call(user)
+          sync_run = UserPlaylistSync::StartSyncService.call(user)
         end
 
         expect(sync_run.reload).to be_completed
@@ -221,7 +218,7 @@ RSpec.describe 'Playlist sync flow' do
   describe 'concurrent sync requests' do
     let(:playlists) do
       Array.new(10) do |i|
-        { spotify_id: "playlist#{i}", name: "Playlist #{i}", description: nil, raw_data: {} }
+        { 'id' => "playlist#{i}", 'name' => "Playlist #{i}", 'description' => nil }
       end
     end
 
@@ -230,15 +227,15 @@ RSpec.describe 'Playlist sync flow' do
         .with(limit: 50, offset: 0)
         .and_return(
           {
-            playlists: playlists,
+            items: playlists,
             pagination: { total: 10, limit: 50, offset: 0, next: nil, previous: nil }
           }
         )
     end
 
     it 'prevents duplicate syncs for same user' do
-      sync_run1 = Playlists::StartSyncService.call(user)
-      sync_run2 = Playlists::StartSyncService.call(user)
+      sync_run1 = UserPlaylistSync::StartSyncService.call(user)
+      sync_run2 = UserPlaylistSync::StartSyncService.call(user)
 
       expect(sync_run1.id).to eq(sync_run2.id)
       expect(PlaylistSyncRun.where(user: user).count).to eq(1)

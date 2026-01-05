@@ -7,7 +7,6 @@ class CreatePlaylistSyncRuns < ActiveRecord::Migration[8.1]
 
       t.integer :status, null: false
 
-      t.integer :total_playlists_expected, default: 0
       t.integer :playlists_processed, default: 0
       t.integer :batches_total, default: 0
       t.integer :batches_completed, default: 0

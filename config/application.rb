@@ -18,6 +18,9 @@ module GenreOrb
     # Common ones are `templates`, `generators`, or `middleware`, for example.
     config.autoload_lib(ignore: %w[assets tasks])
 
+    # Collapse the repositories directory so app/repositories/spotify maps to Spotify::
+    Rails.autoloaders.main.collapse(Rails.root.join('app/repositories'))
+
     # Configuration for the application, engines, and railties goes here.
     #
     # These settings can be overridden in specific environments using the files

@@ -10,33 +10,10 @@ module Spotify
 
     def initialize(user)
       @user = user
-      @rspotify_user = build_rspotify_user
+      @rspotify_user = RspotifyBuilder.build_user(user)
     end
 
     private
-
-    def build_rspotify_user
-      RSpotify::User.new(
-        'credentials' => credentials_hash,
-        'id' => user.spotify_id
-      )
-    end
-
-    def credentials_hash
-      {
-        'token' => user.access_token,
-        'refresh_token' => user.refresh_token,
-        'access_refresh_callback' => token_refresh_callback
-      }
-    end
-
-    def token_refresh_callback
-      proc do |new_access_token, token_lifetime|
-        user.update_spotify_credentials(new_access_token, token_lifetime)
-      rescue StandardError => e
-        raise Errors::AuthenticationError, "Failed to persist refreshed token: #{e.message}"
-      end
-    end
 
     def handle_spotify_errors(endpoint)
       check_rate_limit_cooldown!(endpoint)

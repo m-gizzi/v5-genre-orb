@@ -2,31 +2,26 @@
 
 require 'rails_helper'
 
-RSpec.describe PlaylistSyncRun do
-  describe '.in_progress_for_user' do
-    let(:user) { create(:user) }
-    let!(:user_sync) { create(:playlist_sync_run, user: user, status: :processing_batches) }
-    let!(:user_completed) { create(:playlist_sync_run, user: user, status: :completed) }
+RSpec.describe TrackSyncRun do
+  describe '.in_progress_for_playlist' do
+    let(:playlist) { create(:playlist) }
+    let!(:playlist_sync) { create(:track_sync_run, playlist: playlist, status: :processing_batches) }
 
-    it 'returns the in-progress sync for the specified user' do
-      expect(described_class.in_progress_for_user(user)).to eq(user_sync)
-    end
-
-    it 'does not return completed syncs' do
-      expect(described_class.in_progress_for_user(user)).not_to eq(user_completed)
+    it 'returns the in-progress sync for the specified playlist' do
+      expect(described_class.in_progress_for_playlist(playlist)).to eq(playlist_sync)
     end
 
     it 'returns nil when no in-progress sync exists' do
-      user2 = create(:user)
-      expect(described_class.in_progress_for_user(user2)).to be_nil
+      playlist2 = create(:playlist)
+      expect(described_class.in_progress_for_playlist(playlist2)).to be_nil
     end
   end
 
   describe '#increment_batch_completion!' do
-    let(:sync) { create(:playlist_sync_run, :processing_batches, batches_total: 3, batches_completed: 1) }
+    let(:sync) { create(:track_sync_run, :processing_batches, batches_total: 3, batches_completed: 1) }
 
     before do
-      allow(UserPlaylistSync::ArchiveMissingJob).to receive(:perform_later)
+      allow(PlaylistTrackSync::CleanupRemovedJob).to receive(:perform_later)
     end
 
     it 'increments batches_completed counter' do
@@ -50,15 +45,15 @@ RSpec.describe PlaylistSyncRun do
         expect(sync.reload).to be_archiving
       end
 
-      it 'enqueues archival job with sync_run id' do
+      it 'enqueues cleanup job with sync_run id' do
         sync.increment_batch_completion!
-        expect(UserPlaylistSync::ArchiveMissingJob).to have_received(:perform_later).with(sync.id)
+        expect(PlaylistTrackSync::CleanupRemovedJob).to have_received(:perform_later).with(sync.id)
       end
     end
   end
 
   describe 'AASM state transitions' do
-    let(:sync_run) { create(:playlist_sync_run) }
+    let(:sync_run) { create(:track_sync_run) }
 
     describe '#start_fetching_metadata!' do
       it 'sets started_at timestamp' do
@@ -71,36 +66,44 @@ RSpec.describe PlaylistSyncRun do
 
     describe '#start_archiving!' do
       let(:sync_run) do
-        create(:playlist_sync_run,
+        create(:track_sync_run,
                status: :processing_batches,
                batches_total: 3,
                batches_completed: 3)
       end
 
       before do
-        allow(UserPlaylistSync::ArchiveMissingJob).to receive(:perform_later)
+        allow(PlaylistTrackSync::CleanupRemovedJob).to receive(:perform_later)
       end
 
-      it 'enqueues ArchiveMissingJob' do
+      it 'enqueues CleanupRemovedJob' do
         sync_run.start_archiving!
-        expect(UserPlaylistSync::ArchiveMissingJob).to have_received(:perform_later).with(sync_run.id)
+        expect(PlaylistTrackSync::CleanupRemovedJob).to have_received(:perform_later).with(sync_run.id)
       end
     end
 
     describe '#complete!' do
+      let(:playlist) { create(:playlist, snapshot_id: 'snapshot_123') }
+      let(:sync_run) { create(:track_sync_run, playlist: playlist, status: :archiving) }
+
       it 'sets completed_at timestamp' do
-        sync_run.update!(status: :archiving)
         freeze_time do
           sync_run.complete!
           expect(sync_run.completed_at).to be_within(1.second).of(Time.current)
         end
       end
+
+      it 'calls playlist.mark_tracks_synced! with snapshot_id' do
+        allow(playlist).to receive(:mark_tracks_synced!)
+        sync_run.complete!
+        expect(playlist).to have_received(:mark_tracks_synced!).with(playlist.snapshot_id)
+      end
     end
 
     describe '#fail!' do
       it 'sets error_message when provided' do
-        sync_run.fail!('Authentication failed')
-        expect(sync_run.error_message).to eq('Authentication failed')
+        sync_run.fail!('Spotify API authentication failed')
+        expect(sync_run.error_message).to eq('Spotify API authentication failed')
       end
     end
 
